@@ -15,10 +15,10 @@ for a spin chain of frequencies `freqs` and coupling constants `coups`, on `site
 function spin_chain(freqs::Vector{<:Real}, coups::Vector{<:Real}, sites::Vector{<:Index})
     @assert length(freqs) == length(coups) + 1
     @assert length(sites) == length(freqs)
-    stypes = sitetypes(first(sites))
+    stypes = ITensors._sitetypes(first(sites))
     for st in stypes
         # Check if all sites have this type (otherwise skip this tag).
-        if all(i -> st in sitetypes(i), sites)
+        if all(i -> st in ITensors._sitetypes(i), sites)
             # If the type is shared, then try calling the function with it.
             ℓ = spin_chain(st, freqs, coups, sitenumber.(sites))
             # If the result is something, return that result.
@@ -166,10 +166,10 @@ function spin_chain_adjoint(
 )
     @assert length(freqs) == length(coups) + 1
     @assert length(sites) == length(freqs)
-    stypes = sitetypes(first(sites))
+    stypes = ITensors._sitetypes(first(sites))
     for st in stypes
         # Check if all sites have this type (otherwise skip this tag).
-        if all(i -> st in sitetypes(i), sites)
+        if all(i -> st in ITensors._sitetypes(i), sites)
             # If the type is shared, then try calling the function with it.
             ℓ = spin_chain_adjoint(st, freqs, coups, sitenumber.(sites))
             # If the result is something, return that result.

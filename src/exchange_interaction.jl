@@ -9,7 +9,7 @@ Return an OpSum object encoding the Hamiltonian part ``-i[H, –]`` of an exchan
 between sites `s1` and `s2` term in a GKSL equation.
 """
 function exchange_interaction(s1::Index, s2::Index; kwargs...)
-    for (st1, st2) in zip(sitetypes(s1), sitetypes(s2))
+    for (st1, st2) in zip(ITensors._sitetypes(s1), ITensors._sitetypes(s2))
         ℓ = exchange_interaction(st1, st2, sitenumber(s1), sitenumber(s2); kwargs...)
         # If the result is something, return that result.
         if !isnothing(ℓ)
@@ -225,7 +225,7 @@ Return an OpSum object encoding the adjoint of the Hamiltonian part ``-i[H, –]
 exchange interaction between sites `s1` and `s2` term in a GKSL equation.
 """
 function exchange_interaction_adjoint(s1::Index, s2::Index; kwargs...)
-    for (st1, st2) in zip(sitetypes(s1), sitetypes(s2))
+    for (st1, st2) in zip(ITensors._sitetypes(s1), ITensors._sitetypes(s2))
         ℓ = exchange_interaction_adjoint(
             st1, st2, sitenumber(s1), sitenumber(s2); kwargs...
         )

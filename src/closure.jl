@@ -146,10 +146,10 @@ This closure replaces a chain starting from an empty state.
 """
 function closure_op(mc::Closure, sites::Vector{<:Index}, chain_edge_site::Int)
     @assert length(mc) == length(sites)
-    stypes = sitetypes(first(sites))
+    stypes = ITensors._sitetypes(first(sites))
     for st in stypes
         # Check if all sites have this type (otherwise skip this tag).
-        if all(i -> st in sitetypes(i), sites)
+        if all(i -> st in ITensors._sitetypes(i), sites)
             # If the type is shared, then try calling the function with it.
             ℓ = closure_op(st, mc, sitenumber.(sites), chain_edge_site)
             # If the result is something, return that result.
@@ -285,10 +285,10 @@ function closure_op_adjoint(
     mc::Closure, sites::Vector{<:Index}, chain_edge_site::Int, gradefactor::Int
 )
     @assert length(mc) == length(sites)
-    stypes = sitetypes(first(sites))
+    stypes = ITensors._sitetypes(first(sites))
     for st in stypes
         # Check if all sites have this type (otherwise skip this tag).
-        if all(i -> st in sitetypes(i), sites)
+        if all(i -> st in ITensors._sitetypes(i), sites)
             # If the type is shared, then try calling the function with it.
             ℓ = closure_op_adjoint(st, mc, sitenumber.(sites), chain_edge_site, gradefactor)
             # If the result is something, return that result.
@@ -442,10 +442,10 @@ This closure replaces a chain starting from a completely filled state.
 """
 function filled_closure_op(mc::Closure, sites::Vector{<:Index}, chain_edge_site::Int)
     @assert length(mc) == length(sites)
-    stypes = sitetypes(first(sites))
+    stypes = ITensors._sitetypes(first(sites))
     for st in stypes
         # Check if all sites have this type (otherwise skip this tag).
-        if all(i -> st in sitetypes(i), sites)
+        if all(i -> st in ITensors._sitetypes(i), sites)
             # If the type is shared, then try calling the function with it.
             ℓ = filled_closure_op(st, mc, sitenumber.(sites), chain_edge_site)
             # If the result is something, return that result.
@@ -588,10 +588,10 @@ function filled_closure_op_adjoint(
     mc::Closure, sites::Vector{<:Index}, chain_edge_site::Int, gradefactor::Int
 )
     @assert length(mc) == length(sites)
-    stypes = sitetypes(first(sites))
+    stypes = ITensors._sitetypes(first(sites))
     for st in stypes
         # Check if all sites have this type (otherwise skip this tag).
-        if all(i -> st in sitetypes(i), sites)
+        if all(i -> st in ITensors._sitetypes(i), sites)
             # If the type is shared, then try calling the function with it.
             ℓ = filled_closure_op_adjoint(
                 st, mc, sitenumber.(sites), chain_edge_site, gradefactor
