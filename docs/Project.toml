@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+LindbladVectorizedTensors = "6455c26f-8985-4381-925b-8a93509e9dbd"
