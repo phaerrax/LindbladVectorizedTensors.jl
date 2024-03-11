@@ -1,9 +1,9 @@
 """
     statenamestring(sn::StateName{T}) where T
 
-Return the name of the state "sn" as a string.
+Return the name of the state `sn` as a string.
 """
-function statenamestring(sn::StateName{T}) where T
+function statenamestring(sn::StateName{T}) where {T}
     return string(T)
 end
 
@@ -29,32 +29,6 @@ function jwstring(; start, stop, op::AbstractString="F")
     return collect(Iterators.flatten([(op, start + k) for k in 1:(stop - start - 1)]))
 end
 
-"""
-    groupresults(obs::AbstractObserver, name::String)
-
-If the observer returns an array of values, rearrange the results in a big matrix.
-"""
-function groupresults(obs::AbstractObserver, name::String)
-    return mapreduce(permutedims, vcat, obs[!, name])
-end
-
-"""
-    disablegrifqtech()
-
-Disable the graphical output if the script is running on Qtech.
-"""
-function disablegrifqtech()
-    # The script crashes if it is executed on Qtech, unless we disable
-    # the graphical output.
-    if gethostname() == "qtech.fisica.unimi.it" || gethostname() == "qtech2.fisica.unimi.it"
-        ENV["GKSwstype"] = "100"
-        @info "Running on remote server. Disabling graphical output."
-    else
-        delete!(ENV, "GKSwstype")
-        # If the key "GKSwstype" doesn't exist then nothing happens.
-    end
-end
-
 # Vectorisation utilities
 # =======================
 # In order to use tr(x'*y) as a tool to extract coefficient the basis must
@@ -69,6 +43,7 @@ Compute the vector of coefficients of the matrix `A` wrt the basis `basis`.
 function vec(A::Matrix, basis::Vector)
     return [tr(b' * A) for b in basis]
 end
+
 """
     vec(L::Function, basis::Vector)
 
@@ -188,256 +163,6 @@ function canonicalbasis(dim)
     return [canonicalmatrix(i, j, dim) for (i, j) in [Base.product(1:dim, 1:dim)...]]
 end
 
-# Spin-half space utilities
-# =========================
-
-# Chain eigenstate basis
-# ----------------------
-# How to measure how much each eigenspace of the number operator (of the
-# whole spin chain) "contributes" to a given state ρ?
-# We build a projector operator associated to each eigenspace.
-# The projector on the m-th level eigenspace can be made by simply adding the
-# orthogonal projections on each element of the canonical basis which has m
-# "Up" spins and N-m "Down" spins, N being the length of the chain.
-# This may result in a very big MPO. If these are needed for more than one
-# simulation, calculating them once and for all before the simulations start
-# may help to cut down the computation time.
-"""
-    chain_basis_states(n::Int, level::Int)
-
-Return a list of strings which can be used to build the MPS of all states in
-the ``ℂ²ⁿ`` basis that contain `level` "Up" spins.
-"""
-function chain_basis_states(n::Int, level::Int)
-    return unique(permutations([
-        repeat(["Up"], level)
-        repeat(["Dn"], n - level)
-    ]))
-end
-
-"""
-    level_subspace_proj(sites::Vector{Index{Int64}}, l::Int)
-
-Return the projector on the subspace with `l` "Up" spins.
-"""
-function level_subspace_proj(sites::Vector{Index{Int64}}, l::Int)
-    N = length(sites)
-    # Check if all sites are spin-½ sites.
-    if all(x -> SiteType("S=1/2") in x, sitetypes.(sites))
-        projs = [
-            projector(MPS(sites, names); normalize=false) for
-            names in chain_basis_states(N, l)
-        ]
-    elseif all(x -> SiteType("vecS=1/2") in x, sitetypes.(sites)) ||
-        all(x -> SiteType("HvS=1/2") in x, sitetypes.(sites))
-        projs = [MPS(sites, names) for names in chain_basis_states(N, l)]
-    else
-        throw(
-            ArgumentError(
-                "level_subspace_proj works with SiteTypes " *
-                "\"S=1/2\", \"vecS=1/2\" or \"HvS=1/2\".",
-            ),
-        )
-    end
-    # Somehow return sum(projs) doesn't work… we have to sum manually.
-    P = projs[1]
-    for p in projs[2:end]
-        P = +(P, p; cutoff=1e-10)
-    end
-    return P
-end
-
-# First-level chain eigenstates
-# -----------------------------
-# It is useful to have at hand the eigenstates of the free chain Hamiltonian
-# within the first-level eigenspace of the number operator ([H,N] = 0).
-# States |sₖ⟩ with an up spin on site k and a down spin on the others are
-# in fact not eigenstates, but they still form a basis for the eigenspace;
-# wrt the {sₖ}ₖ (k ∈ {1,…,N}) basis the free chain Hamiltonian is written as
-#   ⎛ ε λ 0 0 … 0 ⎞
-#   ⎜ λ ε λ 0 … 0 ⎟
-#   ⎜ 0 λ ε λ … 0 ⎟
-#   ⎜ 0 0 λ ε … 0 ⎟
-#   ⎜ ⋮ ⋮ ⋮ ⋮ ⋱ ⋮ ⎟
-#   ⎝ 0 0 0 0 … ε ⎠
-# whose eigenstates are |vⱼ⟩= ∑ₖ sin(kjπ /(N+1)) |sₖ⟩, con j ∈ {1,…,N}.
-# Note that they are not normalised: ‖|vⱼ⟩‖² = (N+1)/2.
-"""
-    single_ex_state(sites::Vector{Index{Int64}}, k::Int)
-
-Return the MPS of a state with a single excitation on the `k`-th site.
-"""
-function single_ex_state(sites::Vector{Index{Int64}}, k::Int)
-    N = length(sites)
-    if k ∈ 1:N
-        states = [i == k ? "Up" : "Dn" for i in 1:N]
-    else
-        throw(
-            DomainError(
-                k,
-                "Trying to build a state with an excitation localised " *
-                "at site $k, which does not belong to the chain: please " *
-                "insert a value between 1 and $N.",
-            ),
-        )
-    end
-    return MPS(sites, states)
-end
-
-"""
-    chain_L1_state(sites::Vector{Index{Int64}}, j::Int)
-
-Return the `j`-th eigenstate of the chain Hamiltonian in the single-excitation
-subspace.
-"""
-function chain_L1_state(sites::Vector{Index{Int64}}, j::Int)
-    # FIXME: this seems just wrong. Why not computing directly vec(|vⱼ⟩ ⊗ ⟨vⱼ|), 
-    # without going through the linear combination?
-    #
-    # Careful with the coefficients: this isn't |vⱼ⟩ but vec(|vⱼ⟩ ⊗ ⟨vⱼ|),
-    # so if we want to build it as a linear combination of the |sₖ⟩'s we
-    # need to square the coefficients.
-    # Note that vectorised projectors satisfy
-    #     ⟨vec(a⊗aᵀ), vec(b⊗bᵀ)⟩ = tr((a⊗aᵀ)ᵀ b⊗bᵀ) = (aᵀb)².
-    # We don't expect the norm of this MPS to be 1. What has to be 1, is the
-    # sum of the inner products of vec(|sₖ⟩ ⊗ ⟨sₖ|) and this vector, for
-    # k ∈ {1,…,N}. We get ⟨Pₙ|vⱼ⟩ = 1 only if n=j, otherwise it is 0.
-    N = length(sites)
-    if !(j in 1:N)
-        throw(
-            DomainError(
-                j,
-                "Trying to build a chain eigenstate with invalid index " *
-                "$j: please insert a value between 1 and $N.",
-            ),
-        )
-    end
-    states = [
-        2 / (N + 1) * sin(j * k * π / (N + 1))^2 * single_ex_state(sites, k) for k in 1:N
-    ]
-    return sum(states)
-end
-
-# Choice of the spin chain's initial state
-# ----------------------------------------
-"""
-    parse_init_state(sites::Vector{Index{Int64}}, state::String)
-
-Return an MPS representing a particular state of the spin chain, given
-by the string `state`:
-
-  * "empty" -> empty state (aka the ground state of the chain Hamiltonian)
-  * "1locM" -> state with a single excitation at site `M` (``M ∈ {1,…,N}``)
-  * "1eigM" -> single-excitation eigenstate of the chain Hamiltonian with `M` nodes (``M ∈ {0,…,N-1}``)
-
-The string is case-insensitive. The length `N` of the chain is computed
-from `sites`. 
-"""
-function parse_init_state(sites::Vector{Index{Int64}}, state::String)
-    state = lowercase(state)
-    if state == "empty"
-        v = MPS(sites, "Dn")
-    elseif occursin(r"^1loc", state)
-        j = parse(Int, replace(state, "1loc" => ""))
-        v = single_ex_state(sites, j)
-    elseif occursin(r"^1eig", state)
-        j = parse(Int, replace(state, "1eig" => ""))
-        # The j-th eigenstate has j-1 nodes
-        v = chain_L1_state(sites, j + 1)
-    else
-        throw(
-            DomainError(
-                state,
-                "Unrecognised state: please choose from \"empty\", " *
-                "\"1locN\" or \"1eigN\".",
-            ),
-        )
-    end
-    return v
-end
-
-"""
-    parse_spin_state(site::Index{Int64}, state::String)
-
-Return the MPS of a single spin site representing a particular state, given
-by the string `state`:
-
-- "empty", "dn", "down" → spin-down state
-- "up"                  → spin-up state
-- "x+"                  → ``1/√2 ( |+⟩ + |-⟩ )`` state
-"""
-function parse_spin_state(site::Index{Int64}, state::String)
-    state = lowercase(state)
-    if state == "empty" || state == "dn" || state == "down"
-        v = ITensors.state(site, "Dn")
-    elseif state == "up"
-        v = ITensors.state(site, "Up")
-    elseif state == "x+"
-        v = 1 / sqrt(2) * (ITensors.state(site, "Up") + ITensors.state(site, "Dn"))
-    else
-        throw(DomainError(
-            state,
-            "Unrecognised state: please choose from \"empty\",
-            \"up\", \"down\" or \"x+\".",
-        ))
-    end
-    return MPS([v])
-end
-
-# Oscillator space utilities
-# ==========================
-
-"""
-	oscdimensions(N, basedim, decay)
-
-Compute a decreasing sequence of length `N` where the first two elements are
-equal to `basedim` and the following ones are given by
-`floor(2 + basedim * ℯ^(-decay * n))`.
-
-Useful to determine the dimensions of oscillator sites in a TEDOPA chain.
-"""
-function oscdimensions(length, basedim, decay)
-    f(j) = 2 + basedim * ℯ^(-decay * j)
-    return [basedim; basedim; (Int ∘ floor ∘ f).(3:length)]
-end
-
-"""
-    parse_init_state_osc(site::Index{Int64},
-                         statename::String;
-                         <keyword arguments>)
-
-Return an MPS representing a particular state of a harmonic oscillator, given
-by the string `statename`:
-
-- "thermal" → thermal equilibrium state
-- "fockN"   → `N`-th eigenstate of the number operator (element of Fock basis)
-- "empty"   → alias for "fock0"
-
-The string is case-insensitive. Other parameters required to build the state
-(e.g. frequency, temperature) may be supplied as keyword arguments.
-"""
-function parse_init_state_osc(site::Index{Int64}, statename::String; kwargs...)
-    # TODO: maybe remove "init" from title? It is a generic state, after all.
-    statename = lowercase(statename)
-    if statename == "thermal"
-        s = state(site, "ThermEq"; kwargs...)
-    elseif occursin(r"^fock", statename)
-        j = parse(Int, replace(statename, "fock" => ""))
-        s = state(site, "$j")
-    elseif statename == "empty"
-        s = state(site, "0")
-    else
-        throw(
-            DomainError(
-                statename,
-                "Unrecognised state name; please choose from " *
-                "\"empty\", \"fockN\" or \"thermal\".",
-            ),
-        )
-    end
-    return MPS([s])
-end
-
 # (Von Neumann) Entropy
 # =====================
 """
@@ -482,140 +207,8 @@ function chop(x::Complex; tolerance=1e-10)
     return Complex(chop(real(x)), chop(imag(x)))
 end
 
-# Manipulating ITensor objects
-# ============================
-
-"""
-    sitetypes(s::Index)
-
-Return the ITensor tags of `s` as SiteTypes. 
-
-This function is already defined in the ITensor library, but it is not publicly
-accessible.
-"""
-function sitetypes(s::Index)
-    ts = tags(s)
-    return SiteType[SiteType(ts.data[n]) for n in 1:length(ts)]
-end
-
-# Reading the parameters of the simulations
-# =========================================
-
-"""
-    isjson(filename::String)
-
-Check if `filename` ends in ".json".
-
-By design, filenames consisting of only ".json" return `false`.
-"""
-function isjson(filename::String)
-    return length(filename) > 5 && filename[(end - 4):end] == ".json"
-    # We ignore a file whose name is only ".json".
-end
-
-"""
-    load_parameters(file_list)
-
-Load the JSON files contained in `file_list` into dictionaries, returning a
-list of dictionaries, one for each file.
-
-If `file_list` is a filename, then the list will contain just one dictionary;
-if `file_list` is a directory, every JSON file within it is loaded and a
-dictionary is created for each one of them.
-"""
-function load_parameters(file_list)
-    if isempty(file_list)
-        throw(ErrorException("No parameter file provided."))
-    end
-    first_arg = file_list[1]
-    prev_dir = pwd()
-    if isdir(first_arg)
-        # If the first argument is a directory, we read all the JSON files within
-        # and load them as parameter files; in the end all output will be saved
-        # in that same directory. We ignore the remaining elements in ARGS.
-        cd(first_arg)
-        files = filter(isjson, readdir())
-        @info "$first_arg is a directory. Ignoring other command line arguments."
-    else
-        # Otherwise, all command line arguments are treated as parameter files.
-        # Output files will be saved in the pwd() from which the script was
-        # launched.
-        files = file_list
-    end
-    # Load parameters into dictionaries, one for each file.
-    parameter_lists = []
-    for f in files
-        open(f) do input
-            s = read(input, String)
-            # Add the filename too to the dictionary.
-            push!(parameter_lists, merge(Dict("filename" => f), JSON.parse(s)))
-        end
-    end
-    cd(prev_dir)
-    return parameter_lists
-end
-
-function allequal(a)
-    return all(x -> x == first(a), a)
-end
-
-# Defining the time interval of the simulation
-# ============================================
-
-"""
-    construct_step_list(parameters)
-
-Return a list of time instants at which the time evolution will be evaluated.
-
-The values run from zero up to ``parameters["simulation_end_time"]``, with a
-step size equal to ``parameters["simulation_time_step"]``.
-"""
-function construct_step_list(parameters)
-    τ = parameters["simulation_time_step"]
-    end_time = parameters["simulation_end_time"]
-    return collect(range(0, end_time; step=τ))
-end
-
-# Computing expectation values of observables
-# ===========================================
-
-# Function that calculates the eigenvalues of the number operator, given a set
-# of projectors on the eigenspaces, and also return their sum (which should
-# be 1).
-# TODO: these two functions are probably outdated. Anyway they are not
-# specific to the occupation levels, so they should have a more general
-# description.
-function levels(projs::Vector{MPO}, state::MPS)
-    lev = [real(inner(state, p * state)) for p in projs]
-    return [lev; sum(lev)]
-end
-function levels(projs::Vector{MPS}, state::MPS)
-    lev = [real(inner(p, state)) for p in projs]
-    return [lev; sum(lev)]
-end
-
 # MPS and MPO utilities
 # =====================
-
-"""
-    vectrace(vecρ::MPS, s::Vector{Index{Int64}})
-
-Return the trace of the density matrix ρ which is vectorized and encoded in the
-given MPS `vecρ` on sites `s`.
-"""
-function vectrace(vecρ::MPS, s::Vector{Index{Int64}})
-    return dot(MPS("vecId", s), vecρ)
-end
-
-"""
-    linkdims(m::Union{MPS, MPO})
-
-Return a list of the bond dimensions of `m`.
-"""
-function linkdims(m::Union{MPS,MPO})
-    return [ITensors.dim(linkind(m, j)) for j in 1:(length(m) - 1)]
-end
-
 """
     chain(left::MPS, right::MPS)
 
@@ -675,13 +268,13 @@ function chain(left::MPO, right::MPO)
 end
 
 # Varargs versions
-
 """
     chain(a::MPS, b...)
 
 Concatenate the given MPSs into a longer MPS, returning their tensor product.
 """
 chain(a::MPS, b...) = chain(a, chain(b...))
+
 """
     chain(a::MPO, b...)
 
@@ -771,24 +364,6 @@ end
 
 # Other utilities
 # ===============
-
-"""
-    filenamett(::Dict)
-
-Extracts the filename from the parameter list, supplied as a Dict, and
-formats it in a saw that's safe to use as text in TikZ nodes, plots, etc.,
-in typewriter font.
-"""
-function filenamett(d::Dict)
-    # Get basename and remove the .json extension.
-    filename = replace(basename(d["filename"]), ".json" => "")
-    # Sanitise string, escaping underscores.
-    filename = replace(filename, "_" => "\\_")
-    # Add \texttt command
-    filename = raw"\texttt{" * filename * "}"
-    return filename
-end
-
 """
     consecutivepairs(v::AbstractVector)
 

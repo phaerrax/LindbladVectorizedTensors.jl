@@ -12,12 +12,12 @@ struct Closure
     innercoupling
     outercoupling
     damping
-    @doc"""
-        Closure(ω::Vector{<:Real}, γ::Vector{<:Real}, g::Vector{<:Real}, ζ::Vector{<:Complex})
+    @doc """
+         Closure(ω::Vector{<:Real}, γ::Vector{<:Real}, g::Vector{<:Real}, ζ::Vector{<:Complex})
 
-    Closure is an aggregate type which stores the parameters needed to describe the set of
-    pseudomodes that make up a Markovian closure.
-    """
+     Closure is an aggregate type which stores the parameters needed to describe the set of
+     pseudomodes that make up a Markovian closure.
+     """
     function Closure(
         ω::Vector{<:Real}, γ::Vector{<:Real}, g::Vector{<:Real}, ζ::Vector{<:Complex}
     )
@@ -633,7 +633,9 @@ function filled_closure_op_adjoint(
     for (j, site) in enumerate(sitenumbers)
         # a ρ a†
         opstring = [repeat(["F⋅ * ⋅F"], site - 1); "A⋅ * ⋅A†"]
-        ℓ += (gradefactor * damp(mc, j), collect(Iterators.flatten(zip(opstring, 1:site)))...)
+        ℓ += (
+            gradefactor * damp(mc, j), collect(Iterators.flatten(zip(opstring, 1:site)))...
+        )
         # -0.5 (a a† ρ + ρ a a†) = -0.5 (ρ - a† a ρ + ρ a† a)
         ℓ += 0.5damp(mc, j), "N⋅", site
         ℓ += 0.5damp(mc, j), "⋅N", site
