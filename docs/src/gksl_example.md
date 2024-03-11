@@ -1,4 +1,4 @@
-# Application: GKSL equation
+# GKSL equation
 
 With the states and operators defined by this package, we can define a Lindbladian
 operator acting on density matrices in a GKSL equation.

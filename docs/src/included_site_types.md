@@ -1,4 +1,4 @@
-# SiteTypes included with PseudomodesTTEDOPA
+# SiteTypes included in this package
 
 This package extends the SiteType collection provided by ITensor, by defining types for
 (vectorized) density matrices associated to built-in and operators acting on them.
