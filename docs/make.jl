@@ -11,7 +11,7 @@ DocMeta.setdocmeta!(
 
 makedocs(;
     modules=[LindbladVectorizedTensors],
-    checkdocs=:none,
+    checkdocs=:exported,
     authors="Davide Ferracin <davide.ferracin@protonmail.com> and contributors",
     sitename="LindbladVectorizedTensors.jl",
     format=Documenter.HTML(;
@@ -27,4 +27,8 @@ makedocs(;
     ],
 )
 
-deploydocs(; repo="github.com/phaerrax/LindbladVectorizedTensors.jl", devbranch="main")
+deploydocs(;
+    branch="gh-pages",
+    repo="github.com/phaerrax/LindbladVectorizedTensors.jl",
+    devbranch="main",
+)
