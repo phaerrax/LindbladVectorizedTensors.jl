@@ -2,9 +2,7 @@ module LindbladVectorizedTensors
 
 using ITensors
 using IterTools
-using JSON
 using LinearAlgebra
-using ProgressMeter
 
 import ITensors.state, ITensors.op, ITensors.space
 
