@@ -18,33 +18,3 @@ dissipator
 mixedlindbladplus
 mixedlindbladminus
 ```
-
-## Markovian closure operators
-```@docs
-Closure
-```
-```@docs
-closure
-```
-```@docs
-length(mc::Closure)
-freqs(mc::Closure)
-innercoups(mc::Closure)
-outercoups(mc::Closure)
-damps(mc::Closure)
-freq(mc::Closure, j::Int)
-innercoup(mc::Closure, j::Int)
-outercoup(mc::Closure, j::Int)
-damp(mc::Closure, j::Int)
-```
-
-```@docs
-closure_op(mc::Closure, sites::Vector{<:Index}, chain_edge_site::Int)
-closure_op_adjoint(
-    mc::Closure, sites::Vector{<:Index}, chain_edge_site::Int, gradefactor::Int
-)
-closure_op′
-filled_closure_op
-filled_closure_op_adjoint
-filled_closure_op′
-```
