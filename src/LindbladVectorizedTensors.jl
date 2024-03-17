@@ -28,6 +28,7 @@ include("site_types/electron.jl")
 include("site_types/vectorized_electron.jl")
 include("site_types/fermionic_dot3.jl")
 include("site_types/vectorized_fermionic_dot3.jl")
+include("site_types/vectorized_qbit.jl")
 
 export dissipator_loss, dissipator_gain, dissipator, mixedlindbladplus, mixedlindbladminus
 
