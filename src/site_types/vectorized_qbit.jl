@@ -262,7 +262,7 @@ function adjointmapmatrix(X::OpName; kwargs...)
     # This is some square matrix. We can deduce the dimension, hence the number of qbits
     # on which X acts, from it.
     n_qbits = Int(log2(size(op, 1)))
-    return PseudomodesTTEDOPA.vec(a -> op * a * op', ptmbasis(n_qbits))
+    return LindbladVectorizedTensors.vec(a -> op * a * op', ptmbasis(n_qbits))
 end
 
 """
@@ -274,7 +274,7 @@ The argument must be a valid ITensors OpName for the Qubit site type.
 Additional parameters needed to specify the operator may be passed as keyword arguments.
 """
 function adjointmap_itensor(on::OpName, s1::Index, s_tail::Index...; kwargs...)
-    # Adapted from the ITensors.op function for the `vOsc` site type in PseudomodesTTEDOPA
+    # Adapted from the ITensors.op function for the `vOsc` site type in LindbladVectorizedTensors
     rs = reverse((s1, s_tail...))
     opmat = adjointmapmatrix(on; kwargs...)
     return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)

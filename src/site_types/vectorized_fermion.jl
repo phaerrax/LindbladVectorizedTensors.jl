@@ -20,12 +20,12 @@ ITensors.space(::SiteType"vFermion") = 4
 # Shorthand notation:
 function vstate(sn::StateName, ::SiteType"vFermion")
     v = ITensors.state(sn, SiteType("Fermion"))
-    return PseudomodesTTEDOPA.vec(kron(v, v'), gellmannbasis(2))
+    return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(2))
 end
 function vop(sn::StateName, ::SiteType"vFermion")
     sn = statenamestring(sn)
     on = sn[1] == 'v' ? sn[2:end] : sn
-    return PseudomodesTTEDOPA.vec(try_op(OpName(on), SiteType("Fermion")), gellmannbasis(2))
+    return LindbladVectorizedTensors.vec(try_op(OpName(on), SiteType("Fermion")), gellmannbasis(2))
 end
 
 # States (actual ones)
@@ -60,10 +60,10 @@ end
 # Operator dispatch
 # =================
 function premultiply(mat, ::SiteType"vFermion")
-    return PseudomodesTTEDOPA.vec(x -> mat * x, gellmannbasis(2))
+    return LindbladVectorizedTensors.vec(x -> mat * x, gellmannbasis(2))
 end
 function postmultiply(mat, ::SiteType"vFermion")
-    return PseudomodesTTEDOPA.vec(x -> x * mat, gellmannbasis(2))
+    return LindbladVectorizedTensors.vec(x -> x * mat, gellmannbasis(2))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the

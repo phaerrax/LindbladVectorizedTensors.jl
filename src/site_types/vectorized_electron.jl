@@ -43,10 +43,10 @@ end
 # Operators acting on vectorised spins
 # ------------------------------------
 function premultiply(mat, ::SiteType"vElectron")
-    return PseudomodesTTEDOPA.vec(x -> mat * x, gellmannbasis(4))
+    return LindbladVectorizedTensors.vec(x -> mat * x, gellmannbasis(4))
 end
 function postmultiply(mat, ::SiteType"vElectron")
-    return PseudomodesTTEDOPA.vec(x -> x * mat, gellmannbasis(4))
+    return LindbladVectorizedTensors.vec(x -> x * mat, gellmannbasis(4))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
