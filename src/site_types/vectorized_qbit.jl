@@ -113,6 +113,9 @@ ITensors.state(sn::StateName"1", st::SiteType"vQubit") = vstate(sn, st)
 # -----------------------------
 ITensors.state(sn::StateName"vId", st::SiteType"vQubit") = vop(sn, st)
 ITensors.state(sn::StateName"vX", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"vY", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"vZ", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"vH", st::SiteType"vQubit") = vop(sn, st)
 
 # Operator dispatch
 # =================
