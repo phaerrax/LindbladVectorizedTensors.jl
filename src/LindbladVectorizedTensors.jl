@@ -41,4 +41,7 @@ include("operators.jl")
 include("spin_chain.jl")
 include("exchange_interaction.jl")
 
+export vec_purestate_densitymatrix
+include("vectorize.jl")
+
 end

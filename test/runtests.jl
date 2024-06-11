@@ -1,6 +1,8 @@
-using LindbladVectorizedTensors
+using LindbladVectorizedTensors, ITensors
 using Test
 
-@testset "LindbladVectorizedTensors.jl" begin
-    # Write your tests here.
+include("vectorization.jl")
+
+@testset "Qubit MPO -> vQubit MPS vectorization" begin
+    vectorization_expvalues(; atol=1e-14)
 end
