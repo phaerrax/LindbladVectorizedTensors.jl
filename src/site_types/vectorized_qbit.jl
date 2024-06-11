@@ -117,10 +117,12 @@ ITensors.state(sn::StateName"vX", st::SiteType"vQubit") = vop(sn, st)
 # Operator dispatch
 # =================
 function premultiply(mat, ::SiteType"vQubit")
-    return LindbladVectorizedTensors.vec(x -> mat * x, ptmbasis(1))
+    d = Int(log2(size(mat, 1)))
+    return LindbladVectorizedTensors.vec(x -> mat * x, ptmbasis(d))
 end
 function postmultiply(mat, ::SiteType"vQubit")
-    return LindbladVectorizedTensors.vec(x -> x * mat, ptmbasis(1))
+    d = Int(log2(size(mat, 1)))
+    return LindbladVectorizedTensors.vec(x -> x * mat, ptmbasis(d))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
@@ -156,12 +158,12 @@ function ITensors.op(on::OpName, st::SiteType"vQubit"; kwargs...)
         # name == "A⋅" -> on2 is an empty string
         if on1 == ""
             mat = LindbladVectorizedTensors.try_op(
-                OpName(on2), SiteType("S=1/2"); kwargs...
+                OpName(on2), SiteType("Qubit"); kwargs...
             )
             return postmultiply(mat, st)
         elseif on2 == ""
             mat = LindbladVectorizedTensors.try_op(
-                OpName(on1), SiteType("S=1/2"); kwargs...
+                OpName(on1), SiteType("Qubit"); kwargs...
             )
             return premultiply(mat, st)
         else
