@@ -1,5 +1,3 @@
-using ITensors, LindbladVectorizedTensors, LinearAlgebra
-
 # Additional Qubit gates
 # ----------------------
 ITensors.op(::OpName"Id", ::SiteType"Qubit") = [

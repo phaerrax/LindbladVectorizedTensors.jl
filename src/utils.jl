@@ -387,7 +387,7 @@ op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
 if the former returns nothing.
 """
 function try_op(on::OpName, st::SiteType; kwargs...)
-    stname = String(ITensors.tag(st))
+    stname = String(ITensors.SiteTypes.tag(st))
     opstring = String(ITensors.name(on))
     # Try calling a function of the form:
     #    op(::OpName, ::SiteType; kwargs...)
@@ -427,7 +427,7 @@ Like try_op(on::OpName, st::SiteType; kwargs...) (see [`try_op`](@ref)), but wit
 additional Int argument so that it can be used by SiteTypes without a fixed dimension.
 """
 function try_op(on::OpName, st::SiteType, d::Int; kwargs...)
-    stname = String(ITensors.tag(st))
+    stname = String(ITensors.SiteTypes.tag(st))
     opstring = String(ITensors.name(on))
     # Try calling a function of the form:
     #    op(::OpName, ::SiteType, ::Int; kwargs...)

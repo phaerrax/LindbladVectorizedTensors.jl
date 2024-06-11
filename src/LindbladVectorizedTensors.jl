@@ -1,6 +1,7 @@
 module LindbladVectorizedTensors
 
 using ITensors
+using ITensorMPS
 using IterTools
 using LinearAlgebra
 

@@ -1,3 +1,5 @@
+using ITensors.SiteTypes: _sitetypes
+
 """
     space(::SiteType"vFDot3")
 
@@ -125,8 +127,8 @@ function dot_hamiltonian(::SiteType"vFDot3", energies, coulomb_repulsion, sitenu
 end
 
 function exchange_interaction(::SiteType"vFDot3", s1::Index, s2::Index)
-    stypes1 = ITensors._sitetypes(s1)
-    stypes2 = ITensors._sitetypes(s2)
+    stypes1 = _sitetypes(s1)
+    stypes2 = _sitetypes(s2)
     if (SiteType("vFDot3") in stypes1) && !(SiteType("vFDot3") in stypes2)
         return exchange_interaction(st, sitenumber(s1), sitenumber(s2))
     elseif (SiteType("vFDot3") in stypes2) && !(SiteType("vFDot3") in stypes1)

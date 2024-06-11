@@ -1,5 +1,6 @@
 using LindbladVectorizedTensors
 using ITensors
+using ITensorMPS
 using Documenter
 
 DocMeta.setdocmeta!(
