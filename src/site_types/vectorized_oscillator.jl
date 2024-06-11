@@ -72,7 +72,9 @@ end
 function vop(sn::StateName, ::SiteType"vOsc", d::Int)
     sn = statenamestring(sn)
     on = sn[1] == 'v' ? sn[2:end] : sn
-    return LindbladVectorizedTensors.vec(try_op(OpName(on), SiteType("Osc"), d), gellmannbasis(d))
+    return LindbladVectorizedTensors.vec(
+        try_op(OpName(on), SiteType("Osc"), d), gellmannbasis(d)
+    )
 end
 
 # States
