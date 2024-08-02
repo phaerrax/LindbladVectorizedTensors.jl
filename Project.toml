@@ -1,7 +1,7 @@
 name = "LindbladVectorizedTensors"
 uuid = "6455c26f-8985-4381-925b-8a93509e9dbd"
 authors = ["Davide Ferracin <davide.ferracin@protonmail.com> and contributors"]
-version = "0.16.0"
+version = "0.16.1"
 
 [deps]
 ITensorMPS = "0d1a4710-d33b-49a5-8f18-73bdf49b47e2"
@@ -10,7 +10,7 @@ IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
-ITensors = ">= 0.6.11"
+ITensors = "≥0.4.1"
 julia = "1.6"
 
 [extras]

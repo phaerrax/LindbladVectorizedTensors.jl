@@ -1,4 +1,4 @@
-using LindbladVectorizedTensors, ITensors
+using LindbladVectorizedTensors, ITensors, ITensorMPS
 using Test
 
 include("vectorization.jl")
