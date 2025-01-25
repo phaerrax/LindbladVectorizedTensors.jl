@@ -47,6 +47,8 @@ end
 ITensors.state(sn::StateName"vId", st::SiteType"vFermion") = vop(sn, st)
 ITensors.state(sn::StateName"vN", st::SiteType"vFermion") = vop(sn, st)
 
+ITensors.state(sn::StateName"vF", st::SiteType"vFermion") = vop(sn, st)
+
 ITensors.state(sn::StateName"vA", st::SiteType"vFermion") = vop(sn, st)
 ITensors.state(sn::StateName"va", st::SiteType"vFermion") = vop(sn, st)
 

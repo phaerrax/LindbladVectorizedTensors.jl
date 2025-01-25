@@ -1,7 +1,7 @@
 name = "LindbladVectorizedTensors"
 uuid = "6455c26f-8985-4381-925b-8a93509e9dbd"
 authors = ["Davide Ferracin <davide.ferracin@protonmail.com> and contributors"]
-version = "0.16.1"
+version = "0.16.2"
 
 [deps]
 ITensorMPS = "0d1a4710-d33b-49a5-8f18-73bdf49b47e2"
