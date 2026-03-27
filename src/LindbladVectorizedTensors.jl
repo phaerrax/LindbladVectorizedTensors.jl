@@ -5,7 +5,9 @@ using ITensorMPS
 using IterTools
 using LinearAlgebra
 
-import ITensors.state, ITensors.op, ITensors.space
+using ITensors.state: state
+using ITensors.op: op
+using ITensors.space: space
 
 export chain,
     chop,
