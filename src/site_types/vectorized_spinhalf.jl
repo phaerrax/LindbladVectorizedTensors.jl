@@ -65,6 +65,10 @@ ITensors.state(sn::StateName"Up", st::SiteType"vS=1/2") = vstate(sn, st)
 ITensors.state(sn::StateName"Dn", st::SiteType"vS=1/2") = vstate(sn, st)
 ITensors.state(sn::StateName"↑", st::SiteType"vS=1/2") = vstate(sn, st)
 ITensors.state(sn::StateName"↓", st::SiteType"vS=1/2") = vstate(sn, st)
+ITensors.state(sn::StateName"X+", st::SiteType"vS=1/2") = vstate(sn, st)
+ITensors.state(sn::StateName"X-", st::SiteType"vS=1/2") = vstate(sn, st)
+ITensors.state(sn::StateName"Y+", st::SiteType"vS=1/2") = vstate(sn, st)
+ITensors.state(sn::StateName"Y-", st::SiteType"vS=1/2") = vstate(sn, st)
 
 # States representing vectorised operators
 # ----------------------------------------

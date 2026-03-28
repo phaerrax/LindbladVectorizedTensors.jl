@@ -7,7 +7,7 @@ function vectorization_expvalues(; atol=1e-12)
     # Test that the vectorization is done correctly by measuring the expectation values
     # of some observables on a random state.
     sites = siteinds("Qubit", 4)
-    x = randomMPS(sites; linkdims=4)
+    x = random_mps(sites; linkdims=4)
 
     x_vec = vec_purestate_densitymatrix(SiteType("Qubit"), x)
     sites_vec = siteinds(x_vec)
