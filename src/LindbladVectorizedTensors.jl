@@ -5,10 +5,6 @@ using ITensorMPS
 using IterTools
 using LinearAlgebra
 
-using ITensors.state: state
-using ITensors.op: op
-using ITensors.space: space
-
 export chain,
     chop,
     consecutivepairs,
