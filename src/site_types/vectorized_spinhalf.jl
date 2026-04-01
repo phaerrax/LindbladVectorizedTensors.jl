@@ -17,35 +17,6 @@ ITensors.space(::SiteType"vS=1/2") = 4
 # while a linear map L : Mat(ℂ²) → Mat(ℂ²) by the matrix ℓ such that
 #     ℓᵢⱼ = tr(Λᵢ L(Λⱼ)).
 
-# Aliases (for backwards compatibility)
-ITensors.alias(::SiteType"HvS=1/2") = SiteType"vS=1/2"()
-ITensors.alias(::SiteType"vecS=1/2") = SiteType"vS=1/2"()
-
-ITensors.space(st::SiteType"HvS=1/2") = ITensors.space(ITensors.alias(st))
-ITensors.space(st::SiteType"vecS=1/2") = ITensors.space(ITensors.alias(st))
-
-ITensors.val(vn::ValName, st::SiteType"HvS=1/2") = ITensors.val(vn, ITensors.alias(st))
-ITensors.val(vn::ValName, st::SiteType"vecS=1/2") = ITensors.val(vn, ITensors.alias(st))
-
-# !
-# We need to replicate the signatures of the functions below: since the states are defined
-# using ITensors.state(::StateName, ::SiteType"vS=1/2"), the aliasing function must follow
-# the same structure, otherwise it doesn't pick up the definitions for "vS=1/2".
-# The same goes for the operators.
-function ITensors.state(sn::StateName, st::SiteType"vecS=1/2"; kwargs...)
-    return ITensors.state(sn, ITensors.alias(st); kwargs...)
-end
-function ITensors.state(sn::StateName, st::SiteType"HvS=1/2"; kwargs...)
-    return ITensors.state(sn, ITensors.alias(st); kwargs...)
-end
-
-function ITensors.op(on::OpName, st::SiteType"vecS=1/2"; kwargs...)
-    return ITensors.op(on, ITensors.alias(st); kwargs...)
-end
-function ITensors.op(on::OpName, st::SiteType"HvS=1/2"; kwargs...)
-    return ITensors.op(on, ITensors.alias(st); kwargs...)
-end
-
 # Shorthand notation:
 function vstate(sn::StateName, ::SiteType"vS=1/2")
     v = ITensors.state(sn, SiteType("S=1/2"))
