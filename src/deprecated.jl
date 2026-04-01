@@ -1,11 +1,18 @@
 function vnames_depwarnmsg()
-    warnmsg = "For vectorised site types, state names beginning with `v` or `vec` will be \
-    deprecated in a future version of this package. States corresponding to operators of \
-    the corresponding non-vectorised site type will retain the same name, without `v` or \
-    `vec` added as a prefix. For example, the vectorised version of the operator \"Sx\" \
-    for the \"S=1/2\" type will use the StateName \"Sx\" for the \"vS=1/2\" type, instead \
-    of the current \"vSx\"."
+    warnmsg = "For vectorised site types, state names beginning with `v` or `vec` are \
+    deprecated and will be removed in a future version of this package. States \
+    corresponding to operators of the corresponding non-vectorised site type will use the \
+    same name, without `v` or `vec` added as a prefix. For example, the vectorised version \
+    of the operator \"Sx\" for the \"S=1/2\" type will use the StateName \"Sx\" for the \
+    \"vS=1/2\" type, instead of the current \"vSx\"."
     Base.depwarn(warnmsg, :state; force=true)
+end
+
+function vecHv_depwarnmsg(name)
+    warnmsg = "The \"vec$name\" and \"Hv$name\" site types are deprecated and will be \
+    removed in a future version of this package. Please use the \"v$name\" site type \
+    instead."
+    Base.depwarn(warnmsg, :space; force=true)
 end
 
 # vElectron
@@ -163,7 +170,6 @@ function ITensors.state(::StateName"vY", st::SiteType"vOsc", d::Int)
     vnames_depwarnmsg()
     return ITensors.state(StateName("Y"), st, d)
 end
-
 function ITensors.state(::StateName"veca+", st::SiteType"vOsc", d::Int)
     vnames_depwarnmsg()
     return ITensors.state(StateName("Adag"), st, d)
@@ -187,6 +193,49 @@ end
 function ITensors.state(::StateName"vecId", st::SiteType"vOsc", d::Int)
     vnames_depwarnmsg()
     return ITensors.state(StateName("Id"), st, d)
+end
+
+ITensors.alias(::SiteType"HvOsc") = SiteType"vOsc"()
+ITensors.alias(::SiteType"vecOsc") = SiteType"vOsc"()
+
+function ITensors.space(st::SiteType"HvOsc"; kwargs...)
+    vecHv_depwarnmsg("Osc")
+    return ITensors.space(ITensors.alias(st); kwargs...)
+end
+function ITensors.space(st::SiteType"vecOsc"; kwargs...)
+    vecHv_depwarnmsg("Osc")
+    return ITensors.space(ITensors.alias(st); kwargs...)
+end
+
+function ITensors.val(vn::ValName, st::SiteType"HvOsc")
+    vecHv_depwarnmsg("Osc")
+    return ITensors.val(vn, ITensors.alias(st))
+end
+function ITensors.val(vn::ValName, st::SiteType"vecOsc")
+    vecHv_depwarnmsg("Osc")
+    return ITensors.val(vn, ITensors.alias(st))
+end
+
+function ITensors.state(sn::StateName, st::SiteType"vecOsc", s::Index; kwargs...)
+    vecHv_depwarnmsg("Osc")
+    return ITensors.state(sn, ITensors.alias(st), s; kwargs...)
+end
+function ITensors.state(sn::StateName, st::SiteType"HvOsc", s::Index; kwargs...)
+    vecHv_depwarnmsg("Osc")
+    return ITensors.state(sn, ITensors.alias(st), s; kwargs...)
+end
+
+function ITensors.op(
+    on::OpName, st::SiteType"vecOsc", s1::Index, s_tail::Index...; kwargs...
+)
+    vecHv_depwarnmsg("Osc")
+    return ITensors.op(on, ITensors.alias(st), s1, s_tail...; kwargs...)
+end
+function ITensors.op(
+    on::OpName, st::SiteType"HvOsc", s1::Index, s_tail::Index...; kwargs...
+)
+    vecHv_depwarnmsg("Osc")
+    return ITensors.op(on, ITensors.alias(st), s1, s_tail...; kwargs...)
 end
 
 # vQubit
@@ -283,4 +332,43 @@ end
 function ITensors.state(::StateName"vecId", st::SiteType"vS=1/2")
     vnames_depwarnmsg()
     return ITensors.state(StateName("Id"), st)
+end
+
+ITensors.alias(::SiteType"HvS=1/2") = SiteType"vS=1/2"()
+ITensors.alias(::SiteType"vecS=1/2") = SiteType"vS=1/2"()
+
+function ITensors.space(st::SiteType"HvS=1/2")
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.space(ITensors.alias(st))
+end
+function ITensors.space(st::SiteType"vecS=1/2")
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.space(ITensors.alias(st))
+end
+
+function ITensors.val(vn::ValName, st::SiteType"HvS=1/2")
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.val(vn, ITensors.alias(st))
+end
+function ITensors.val(vn::ValName, st::SiteType"vecS=1/2")
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.val(vn, ITensors.alias(st))
+end
+
+function ITensors.state(sn::StateName, st::SiteType"vecS=1/2"; kwargs...)
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.state(sn, ITensors.alias(st); kwargs...)
+end
+function ITensors.state(sn::StateName, st::SiteType"HvS=1/2"; kwargs...)
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.state(sn, ITensors.alias(st); kwargs...)
+end
+
+function ITensors.op(on::OpName, st::SiteType"vecS=1/2"; kwargs...)
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.op(on, ITensors.alias(st); kwargs...)
+end
+function ITensors.op(on::OpName, st::SiteType"HvS=1/2"; kwargs...)
+    vecHv_depwarnmsg("S=1/2")
+    return ITensors.op(on, ITensors.alias(st); kwargs...)
 end

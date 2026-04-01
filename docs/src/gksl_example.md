@@ -70,7 +70,7 @@ For example, if ``A`` is the number operator on site 3, i.e ``I\otimes I\otimes 
 then we need the following code.
 
 ```julia
-vec_n = MPS(s, [i == 3 ? "vN" : "vId" for i in 1:N])
+vec_n = MPS(s, [i == 3 ? "N" : "Id" for i in 1:N])
 result = dot(vec_n, ρ)
 ```
 
@@ -78,6 +78,6 @@ As a particular case, the trace of the state can be obtained by "measuring" the 
 operator:
 
 ```julia
-vec_id = MPS(s, "vId")
+vec_id = MPS(s, "Id")
 trace = dot(vec_id, ρ)
 ```

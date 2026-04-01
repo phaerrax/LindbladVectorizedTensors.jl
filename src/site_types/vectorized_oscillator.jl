@@ -32,38 +32,6 @@ function ITensors.op(on::OpName, st::SiteType"vOsc", s1::Index, s_tail::Index...
     return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)
 end
 
-# Aliases (for backwards compatibility)
-ITensors.alias(::SiteType"HvOsc") = SiteType"vOsc"()
-ITensors.alias(::SiteType"vecOsc") = SiteType"vOsc"()
-
-function ITensors.space(st::SiteType"HvOsc"; kwargs...)
-    return ITensors.space(ITensors.alias(st); kwargs...)
-end
-function ITensors.space(st::SiteType"vecOsc"; kwargs...)
-    return ITensors.space(ITensors.alias(st); kwargs...)
-end
-
-ITensors.val(vn::ValName, st::SiteType"HvOsc") = ITensors.val(vn, ITensors.alias(st))
-ITensors.val(vn::ValName, st::SiteType"vecOsc") = ITensors.val(vn, ITensors.alias(st))
-
-function ITensors.state(sn::StateName, st::SiteType"vecOsc", s::Index; kwargs...)
-    return ITensors.state(sn, ITensors.alias(st), s; kwargs...)
-end
-function ITensors.state(sn::StateName, st::SiteType"HvOsc", s::Index; kwargs...)
-    return ITensors.state(sn, ITensors.alias(st), s; kwargs...)
-end
-
-function ITensors.op(
-    on::OpName, st::SiteType"vecOsc", s1::Index, s_tail::Index...; kwargs...
-)
-    return ITensors.op(on, ITensors.alias(st), s1, s_tail...; kwargs...)
-end
-function ITensors.op(
-    on::OpName, st::SiteType"HvOsc", s1::Index, s_tail::Index...; kwargs...
-)
-    return ITensors.op(on, ITensors.alias(st), s1, s_tail...; kwargs...)
-end
-
 # Shorthand notation:
 function vstate(sn::StateName, ::SiteType"vOsc", d::Int)
     v = ITensors.state(sn, SiteType("Osc"))
