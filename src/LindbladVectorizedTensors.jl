@@ -17,6 +17,7 @@ export chain,
     vonneumannentropy
 
 include("utils.jl")
+include("deprecated.jl")
 
 include("site_types/spinhalf.jl")
 include("site_types/vectorized_spinhalf.jl")

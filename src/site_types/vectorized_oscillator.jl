@@ -70,10 +70,8 @@ function vstate(sn::StateName, ::SiteType"vOsc", d::Int)
     return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(d))
 end
 function vop(sn::StateName, ::SiteType"vOsc", d::Int)
-    sn = statenamestring(sn)
-    on = sn[1] == 'v' ? sn[2:end] : sn
     return LindbladVectorizedTensors.vec(
-        try_op(OpName(on), SiteType("Osc"), d), gellmannbasis(d)
+        try_op(OpName(statenamestring(sn)), SiteType("Osc"), d), gellmannbasis(d)
     )
 end
 
@@ -121,32 +119,12 @@ end
 
 # States representing vectorised operators
 # ----------------------------------------
-ITensors.state(sn::StateName"vAdag", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"vA", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"vN", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"vId", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"vX", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"vY", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-
-# Aliases (for backwards compatibility)
-function ITensors.state(::StateName"veca+", st::SiteType"vOsc", d::Int)
-    return ITensors.state(StateName("vAdag"), st, d)
-end
-function ITensors.state(::StateName"veca-", st::SiteType"vOsc", d::Int)
-    return ITensors.state(StateName("vA"), st, d)
-end
-function ITensors.state(::StateName"vecplus", st::SiteType"vOsc", d::Int)
-    return ITensors.state(StateName("vAdag"), st, d)
-end
-function ITensors.state(::StateName"vecminus", st::SiteType"vOsc", d::Int)
-    return ITensors.state(StateName("vA"), st, d)
-end
-function ITensors.state(::StateName"vecN", st::SiteType"vOsc", d::Int)
-    return ITensors.state(StateName("vN"), st, d)
-end
-function ITensors.state(::StateName"vecId", st::SiteType"vOsc", d::Int)
-    return ITensors.state(StateName("vId"), st, d)
-end
+ITensors.state(sn::StateName"Adag", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"A", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"N", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"Id", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"X", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"Y", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
 
 # Operator dispatch
 # =================

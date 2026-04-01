@@ -23,10 +23,8 @@ function vstate(sn::StateName, ::SiteType"vFermion")
     return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(2))
 end
 function vop(sn::StateName, ::SiteType"vFermion")
-    sn = statenamestring(sn)
-    on = sn[1] == 'v' ? sn[2:end] : sn
     return LindbladVectorizedTensors.vec(
-        try_op(OpName(on), SiteType("Fermion")), gellmannbasis(2)
+        try_op(OpName(statenamestring(sn)), SiteType("Fermion")), gellmannbasis(2)
     )
 end
 
@@ -44,22 +42,15 @@ end
 
 # States representing vectorised operators
 # ----------------------------------------
-ITensors.state(sn::StateName"vId", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"vN", st::SiteType"vFermion") = vop(sn, st)
-
-ITensors.state(sn::StateName"vF", st::SiteType"vFermion") = vop(sn, st)
-
-ITensors.state(sn::StateName"vA", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"va", st::SiteType"vFermion") = vop(sn, st)
-
-ITensors.state(sn::StateName"vAdag", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"vadag", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"vA†", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"va†", st::SiteType"vFermion") = vop(sn, st)
-
-function ITensors.state(::StateName"vecId", ::SiteType"vFermion")
-    return ITensors.state(StateName("vId"), SiteType("vFermion"))
-end
+ITensors.state(sn::StateName"Id", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"N", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"F", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"A", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"a", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"Adag", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"adag", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"A†", st::SiteType"vFermion") = vop(sn, st)
+ITensors.state(sn::StateName"a†", st::SiteType"vFermion") = vop(sn, st)
 
 # Operator dispatch
 # =================

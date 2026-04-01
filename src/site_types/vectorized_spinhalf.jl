@@ -52,10 +52,8 @@ function vstate(sn::StateName, ::SiteType"vS=1/2")
     return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(2))
 end
 function vop(sn::StateName, ::SiteType"vS=1/2")
-    sn = statenamestring(sn)
-    on = sn[1] == 'v' ? sn[2:end] : sn
     return LindbladVectorizedTensors.vec(
-        try_op(OpName(on), SiteType("S=1/2")), gellmannbasis(2)
+        try_op(OpName(statenamestring(sn)), SiteType("S=1/2")), gellmannbasis(2)
     )
 end
 
@@ -72,43 +70,19 @@ ITensors.state(sn::StateName"Y-", st::SiteType"vS=1/2") = vstate(sn, st)
 
 # States representing vectorised operators
 # ----------------------------------------
-ITensors.state(sn::StateName"vSx", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vSy", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vSz", st::SiteType"vS=1/2") = vop(sn, st)
-
-ITensors.state(sn::StateName"vX", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vY", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vZ", st::SiteType"vS=1/2") = vop(sn, st)
-
-ITensors.state(sn::StateName"vσx", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vσy", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vσz", st::SiteType"vS=1/2") = vop(sn, st)
-
-ITensors.state(sn::StateName"vId", st::SiteType"vS=1/2") = vop(sn, st)
-ITensors.state(sn::StateName"vN", st::SiteType"vS=1/2") = vop(sn, st)
-
-# Aliases (for backwards compatibility)
-function ITensors.state(::StateName"vecσx", st::SiteType"vS=1/2")
-    return ITensors.state(StateName("vσx"), st)
-end
-function ITensors.state(::StateName"vecσy", st::SiteType"vS=1/2")
-    return ITensors.state(StateName("vσy"), st)
-end
-function ITensors.state(::StateName"vecσz", st::SiteType"vS=1/2")
-    return ITensors.state(StateName("vσz"), st)
-end
-function ITensors.state(::StateName"vecplus", ::SiteType"vS=1/2")
-    return vec(ITensors.op(OpName("S+"), SiteType("S=1/2")), gellmannbasis(2))
-end
-function ITensors.state(::StateName"vecminus", ::SiteType"vS=1/2")
-    return vec(ITensors.op(OpName("S-"), SiteType("S=1/2")), gellmannbasis(2))
-end
-function ITensors.state(::StateName"vecN", st::SiteType"vS=1/2")
-    return ITensors.state(StateName("vN"), st)
-end
-function ITensors.state(::StateName"vecId", st::SiteType"vS=1/2")
-    return ITensors.state(StateName("vId"), st)
-end
+ITensors.state(sn::StateName"Sx", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"Sy", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"Sz", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"X", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"Y", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"Z", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"σx", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"σy", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"σz", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"Id", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"N", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"S+", st::SiteType"vS=1/2") = vop(sn, st)
+ITensors.state(sn::StateName"S-", st::SiteType"vS=1/2") = vop(sn, st)
 
 # Operator dispatch
 # =================

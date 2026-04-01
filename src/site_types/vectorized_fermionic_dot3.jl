@@ -26,7 +26,7 @@ function vstate(sn::AbstractString, ::SiteType"vFDot3")
 end
 function vop(on::AbstractString, ::SiteType"vFDot3")
     return LindbladVectorizedTensors.vec(
-        ITensors.op(OpName(on), SiteType("FDot3")), gellmannbasis(2^3)
+        try_op(OpName(statenamestring(sn)), SiteType("FDot3")), gellmannbasis(2^3)
     )
 end
 
@@ -39,25 +39,24 @@ end
 # e_6 -> c₁† c₃†|∅⟩
 # e_7 -> c₂† c₃†|∅⟩
 # e_8 -> c₁† c₂† c₃†|∅⟩
-ITensors.state(::StateName"Emp", st::SiteType"vFDot3") = vstate("Emp", st)
+ITensors.state(sn::StateName"Emp", st::SiteType"vFDot3") = vstate(sn, st)
 ITensors.state(::StateName"0", st::SiteType"vFDot3") = state(StateName("Emp"), st)
 ITensors.state(::StateName"Vac", st::SiteType"vFDot3") = state(StateName("Emp"), st)
 ITensors.state(::StateName"Vacuum", st::SiteType"vFDot3") = state(StateName("Emp"), st)
 
-ITensors.state(::StateName"1", st::SiteType"vFDot3") = vstate("1", st)
-ITensors.state(::StateName"2", st::SiteType"vFDot3") = vstate("2", st)
-ITensors.state(::StateName"12", st::SiteType"vFDot3") = vstate("12", st)
-ITensors.state(::StateName"3", st::SiteType"vFDot3") = vstate("3", st)
-ITensors.state(::StateName"13", st::SiteType"vFDot3") = vstate("13", st)
-ITensors.state(::StateName"23", st::SiteType"vFDot3") = vstate("23", st)
-ITensors.state(::StateName"123", st::SiteType"vFDot3") = vstate("123", st)
+ITensors.state(sn::StateName"1", st::SiteType"vFDot3") = vstate(sn, st)
+ITensors.state(sn::StateName"2", st::SiteType"vFDot3") = vstate(sn, st)
+ITensors.state(sn::StateName"12", st::SiteType"vFDot3") = vstate(sn, st)
+ITensors.state(sn::StateName"3", st::SiteType"vFDot3") = vstate(sn, st)
+ITensors.state(sn::StateName"13", st::SiteType"vFDot3") = vstate(sn, st)
+ITensors.state(sn::StateName"23", st::SiteType"vFDot3") = vstate(sn, st)
+ITensors.state(sn::StateName"123", st::SiteType"vFDot3") = vstate(sn, st)
 
-ITensors.state(::StateName"vId", st::SiteType"vFDot3") = vop("Id", st)
-ITensors.state(::StateName"vecId", st::SiteType"vFDot3") = vop("Id", st)
-ITensors.state(::StateName"vn1", st::SiteType"vFDot3") = vop("n1", st)
-ITensors.state(::StateName"vn2", st::SiteType"vFDot3") = vop("n2", st)
-ITensors.state(::StateName"vn3", st::SiteType"vFDot3") = vop("n3", st)
-ITensors.state(::StateName"vntot", st::SiteType"vFDot3") = vop("ntot", st)
+ITensors.state(sn::StateName"Id", st::SiteType"vFDot3") = vop(sn, st)
+ITensors.state(sn::StateName"n1", st::SiteType"vFDot3") = vop(sn, st)
+ITensors.state(sn::StateName"n2", st::SiteType"vFDot3") = vop(sn, st)
+ITensors.state(sn::StateName"n3", st::SiteType"vFDot3") = vop(sn, st)
+ITensors.state(sn::StateName"ntot", st::SiteType"vFDot3") = vop(sn, st)
 
 # Operator dispatch
 # =================

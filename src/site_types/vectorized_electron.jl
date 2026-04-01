@@ -16,9 +16,9 @@ function vstate(sn::StateName, ::SiteType"vElectron")
     return vec(kron(v, v'), gellmannbasis(4))
 end
 function vop(sn::StateName, ::SiteType"vElectron")
-    sn = statenamestring(sn)
-    on = sn[1] == 'v' ? sn[2:end] : sn
-    return vec(ITensors.op(OpName(on), SiteType("Electron")), gellmannbasis(4))
+    return LindbladVectorizedTensors.vec(
+        try_op(OpName(statenamestring(sn)), SiteType("Electron")), gellmannbasis(4)
+    )
 end
 
 # States (actual ones)
@@ -30,26 +30,25 @@ ITensors.state(sn::StateName"UpDn", st::SiteType"vElectron") = vstate(sn, st)
 
 # States representing vectorised operators
 # ----------------------------------------
-ITensors.state(sn::StateName"vId", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vNup", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vNdn", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vNtot", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vNupNdn", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Id", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Nup", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Ndn", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Ntot", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"NupNdn", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Aup", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Adagup", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Adn", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Adagdn", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"F", st::SiteType"vElectron") = vop(sn, st)
 
-ITensors.state(sn::StateName"vAup", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vAdagup", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vAdn", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vAdagdn", st::SiteType"vElectron") = vop(sn, st)
-ITensors.state(sn::StateName"vF", st::SiteType"vElectron") = vop(sn, st)
-
-function ITensors.state(::StateName"vAupF", ::SiteType"vElectron")
+function ITensors.state(::StateName"AupF", ::SiteType"vElectron")
     return vec(
         ITensors.op(OpName("Aup"), SiteType("Electron")) *
         ITensors.op(OpName("F"), SiteType("Electron")),
         gellmannbasis(4),
     )
 end
-function ITensors.state(::StateName"vAdagupF", ::SiteType"vElectron")
+function ITensors.state(::StateName"AdagupF", ::SiteType"vElectron")
     return vec(
         ITensors.op(OpName("Adagup"), SiteType("Electron")) *
         ITensors.op(OpName("F"), SiteType("Electron")),
@@ -57,16 +56,13 @@ function ITensors.state(::StateName"vAdagupF", ::SiteType"vElectron")
     )
 end
 
-function ITensors.state(::StateName"vA", st::SiteType"vElectron")
-    return ITensors.state(StateName("vAupF"), st) + ITensors.state(StateName("vAdn"), st)
-end
-function ITensors.state(::StateName"vAdag", st::SiteType"vElectron")
-    return ITensors.state(StateName("vAdagupF"), st) +
-           ITensors.state(StateName("vAdagdn"), st)
+function ITensors.state(::StateName"A", st::SiteType"vElectron")
+    return ITensors.state(StateName("AupF"), st) + ITensors.state(StateName("Adn"), st)
 end
 
-function ITensors.state(::StateName"vecId", st::SiteType"vElectron")
-    return ITensors.state(StateName("vId"), st)
+function ITensors.state(::StateName"Adag", st::SiteType"vElectron")
+    return ITensors.state(StateName("AdagupF"), st) +
+           ITensors.state(StateName("Adagdn"), st)
 end
 
 # Operators acting on vectorised spins

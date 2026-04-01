@@ -111,10 +111,8 @@ function vstate(sn::StateName, ::SiteType"vQubit")
     return LindbladVectorizedTensors.vec(kron(v, v'), ptmbasis(1))
 end
 function vop(sn::StateName, ::SiteType"vQubit")
-    sn = LindbladVectorizedTensors.statenamestring(sn)
-    on = sn[1] == 'v' ? sn[2:end] : sn
     return LindbladVectorizedTensors.vec(
-        LindbladVectorizedTensors.try_op(OpName(on), SiteType("Qubit")), ptmbasis(1)
+        try_op(OpName(statenamestring(sn)), SiteType("Qubit")), ptmbasis(1)
     )
 end
 
@@ -125,11 +123,11 @@ ITensors.state(sn::StateName"1", st::SiteType"vQubit") = vstate(sn, st)
 
 # States (vectorized operators)
 # -----------------------------
-ITensors.state(sn::StateName"vId", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"vX", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"vY", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"vZ", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"vH", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"Id", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"X", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"Y", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"Z", st::SiteType"vQubit") = vop(sn, st)
+ITensors.state(sn::StateName"H", st::SiteType"vQubit") = vop(sn, st)
 
 # Operator dispatch
 # =================
