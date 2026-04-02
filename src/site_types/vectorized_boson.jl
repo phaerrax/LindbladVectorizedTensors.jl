@@ -1,28 +1,30 @@
-# Space of harmonic oscillators (vectorised)
-# ==========================================
-"""
-    ITensors.space(st::SiteType"vOsc"; dim = 2)
+export dissipator_loss, dissipator_gain, dissipator
 
-Create the Hilbert space for a site of type "vOsc", i.e. a vectorised
+"""
+    ITensors.space(st::SiteType"vBoson"; dim = 2)
+
+Create the Hilbert space for a site of type "vBoson", i.e. a vectorised
 harmonic oscillator of dimension `dim` (this means that the space has dimension
 `dim^2`), where the vectorisation is performed wrt the (Hermitian) Gell-Mann
 basis of `Mat(ℂᵈⁱᵐ)`.
 """
-function ITensors.space(::SiteType"vOsc"; dim=2)
+function ITensors.space(::SiteType"vBoson"; dim=2)
     return dim^2
 end
 
-# Just as with the "Osc" site type, "vOsc" operator and states require that we specify the
-# dimension of the space, so we need to compute ITensors.dim.(rs), i.e. the dimensions of
-# the Indices of the operator, and append them to the function arguments.
+# Just as with the "Boson" site type, "vBoson" operator and states require that we specify
+# the dimension of the space, so we need to compute ITensors.dim(s), i.e. the dimensions of
+# the Indices of the state or operator, and append them to the function arguments.
 
-function ITensors.state(sn::StateName, st::SiteType"vOsc", s::Index; kwargs...)
+function ITensors.state(sn::StateName, st::SiteType"vBoson", s::Index; kwargs...)
     d = isqrt(ITensors.dim(s))
     stvec = ITensors.state(sn, st, d; kwargs...)
     return ITensors.itensor(stvec, s)
 end
 
-function ITensors.op(on::OpName, st::SiteType"vOsc", s1::Index, s_tail::Index...; kwargs...)
+function ITensors.op(
+    on::OpName, st::SiteType"vBoson", s1::Index, s_tail::Index...; kwargs...
+)
     rs = reverse((s1, s_tail...))
     dims = isqrt.(ITensors.dim.(rs))
     # Use `isqrt` which takes an Int and returns an Int; the decimal part is
@@ -32,85 +34,85 @@ function ITensors.op(on::OpName, st::SiteType"vOsc", s1::Index, s_tail::Index...
     return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)
 end
 
-# Shorthand notation:
-function vstate(sn::StateName, ::SiteType"vOsc", d::Int)
-    v = ITensors.state(sn, SiteType("Osc"))
+# Shorthand notation
+function vstate(sn::StateName, ::SiteType"vBoson", d::Int)
+    v = ITensors.state(sn, SiteType("Boson"))
     return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(d))
 end
-function vop(sn::StateName, ::SiteType"vOsc", d::Int)
+function vop(sn::StateName, ::SiteType"vBoson", d::Int)
     return LindbladVectorizedTensors.vec(
-        try_op(OpName(statenamestring(sn)), SiteType("Osc"), d), gellmannbasis(d)
+        try_op(OpName(statenamestring(sn)), SiteType("Boson"), d), gellmannbasis(d)
     )
 end
 
 # States
 # ------
-function ITensors.state(::StateName{N}, ::SiteType"vOsc", d::Int) where {N}
+function ITensors.state(::StateName{N}, ::SiteType"vBoson", d::Int) where {N}
     # Eigenstates êₙ ⊗ êₙ of the number operator, wrt the Hermitian basis.
     n = parse(Int, String(N))
     v = zeros(d)
     v[n + 1] = 1.0
-    return vec(kron(v, v'), gellmannbasis(d))
+    return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(d))
 end
 
 function ITensors.state(
-    ::StateName"ThermEq", st::SiteType"vOsc", d::Int; frequency::Real, temperature::Real
+    ::StateName"ThermEq", st::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
 )
     if temperature == 0
         return ITensors.state(StateName("0"), st, d)
     else
-        numop = ITensors.op(OpName("N"), SiteType("Osc"), d)
+        numop = ITensors.op(OpName("N"), SiteType("Boson"), d)
         # We don't need to define our own matrix for the number operator when
         # we can call this one instead.
         ρ_eq = exp(-frequency / temperature * numop)
         ρ_eq /= tr(ρ_eq)
-        return vec(ρ_eq, gellmannbasis(d))
+        return LindbladVectorizedTensors.vec(ρ_eq, gellmannbasis(d))
     end
 end
 
 # Product of X = (a+a†)/√2 and of the thermal equilibrium state Z⁻¹vec(exp(-βH)).
 # It is used in the computation of the correlation function of the bath.
 function ITensors.state(
-    ::StateName"X⋅Therm", st::SiteType"vOsc", d::Int; frequency::Real, temperature::Real
+    ::StateName"X⋅Therm", st::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
 )
-    xop = ITensors.op(OpName("X"), SiteType("Osc"), d)
+    xop = ITensors.op(OpName("X"), SiteType("Boson"), d)
     if temperature == 0
         ρ_eq = zeros(Float64, d, d)
         ρ_eq[1, 1] = 1.0
     else
-        numop = ITensors.op(OpName("N"), SiteType("Osc"), d)
+        numop = ITensors.op(OpName("N"), SiteType("Boson"), d)
         ρ_eq = exp(-frequency / temperature * numop)
         ρ_eq /= tr(ρ_eq)
     end
-    return vec(xop * ρ_eq, gellmannbasis(d))
+    return LindbladVectorizedTensors.vec(xop * ρ_eq, gellmannbasis(d))
 end
 
 # States representing vectorised operators
 # ----------------------------------------
-ITensors.state(sn::StateName"Adag", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"A", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"N", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"Id", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"X", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"Y", st::SiteType"vOsc", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"Adag", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"A", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"N", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"Id", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"X", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
+ITensors.state(sn::StateName"Y", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
 
 # Operator dispatch
 # =================
-function premultiply(mat, ::SiteType"vOsc", d::Int)
+function premultiply(mat, ::SiteType"vBoson", d::Int)
     return LindbladVectorizedTensors.vec(x -> mat * x, gellmannbasis(d))
 end
-function postmultiply(mat, ::SiteType"vOsc", d::Int)
+function postmultiply(mat, ::SiteType"vBoson", d::Int)
     return LindbladVectorizedTensors.vec(x -> x * mat, gellmannbasis(d))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
-# OpName "A" is defined for the Osc site type.
+# OpName "A" is defined for the Boson site type.
 # This is handy, but unless we find a better way to define this function this means that
 # _every_ operator has to be written this way; we cannot just return op(on, st) at the end
 # if no "⋅" is found, otherwise an infinite loop would be entered.
 # We make an exception, though, for "Id" since it is an essential operator, and something
 # would probably break if it weren't defined.
-function ITensors.op(on::OpName, st::SiteType"vOsc", d::Int; kwargs...)
+function ITensors.op(on::OpName, st::SiteType"vBoson", d::Int; kwargs...)
     name = strip(String(ITensors.name(on))) # Remove extra whitespace
     if name == "Id"
         return Matrix(1.0I, d^2, d^2)
@@ -135,10 +137,10 @@ function ITensors.op(on::OpName, st::SiteType"vOsc", d::Int; kwargs...)
         # name == "⋅A" -> on1 is an empty string
         # name == "A⋅" -> on2 is an empty string
         if on1 == ""
-            mat = try_op(OpName(on2), SiteType("Osc"), d; kwargs...)
+            mat = try_op(OpName(on2), SiteType("Boson"), d; kwargs...)
             return postmultiply(mat, st, d)
         elseif on2 == ""
-            mat = try_op(OpName(on1), SiteType("Osc"), d; kwargs...)
+            mat = try_op(OpName(on1), SiteType("Boson"), d; kwargs...)
             return premultiply(mat, st, d)
         else
             # This should logically never happen but, just in case, we throw an error.
@@ -198,45 +200,9 @@ Return an OpSum object which represents the dissipator in the GKSL equation for 
 `frequency` and `temperature`, i.e. with dissipation coefficient `1/(exp(freq/temp) - 1)`.
 """
 function dissipator(n::Int, frequency::Real, temperature::Real)
-    if temperature == 0
-        return dissipator_loss(n)
-    else
-        # Use `expm1(x)` instead of `e^x-1` for better precision.
-        avgn = 1 / expm1(frequency / temperature)
-        return (avgn + 1) * dissipator_loss(n) + avgn * dissipator_gain(n)
-    end
-end
-
-"""
-    mixedlindbladplus(n1::Int, n2::Int)
-
-Return on OpSum expression which represents a mixed dissipation operator, appearing in the
-equation for two pseudomodes, on sites at positions `n1` and `n2` in the system.
-"""
-function mixedlindbladplus(n1::Int, n2::Int)
-    x = OpSum()
-    x += "A⋅", n1, "⋅Adag", n2
-    x += "⋅Adag", n1, "A⋅", n2
-    x += -0.5, "Adag⋅", n1, "A⋅", n2
-    x += -0.5, "A⋅", n1, "Adag⋅", n2
-    x += -0.5, "⋅Adag", n1, "⋅A", n2
-    x += -0.5, "⋅A", n1, "⋅Adag", n2
-    return x
-end
-
-"""
-    mixedlindbladminus(n1::Int, n2::Int)
-
-Return on OpSum expression which represents a mixed dissipation operator, appearing in the
-equation for two pseudomodes, on sites at positions `n1` and `n2` in the system.
-"""
-function mixedlindbladminus(n1::Int, n2::Int)
-    x = OpSum()
-    x += "Adag⋅", n1, "⋅A", n2
-    x += "Adag⋅", n2, "⋅A", n1
-    x += -0.5, "A⋅", n1, "Adag⋅", n2
-    x += -0.5, "Adag⋅", n1, "A⋅", n2
-    x += -0.5, "⋅A", n1, "⋅Adag", n2
-    x += -0.5, "⋅Adag", n1, "⋅A", n2
-    return x
+    # Use `expm1(x)` instead of `e^x-1` for better precision.
+    avgn = 1 / expm1(frequency / temperature)
+    # Julia can do math with 1/0 = Inf and 1/Inf = 0, so if temperature = 0 then avgn will
+    # be 0, there's no division-by-zero error here.
+    return (avgn + 1) * dissipator_loss(n) + avgn * dissipator_gain(n)
 end
