@@ -7,6 +7,11 @@ function statenamestring(sn::StateName{T}) where {T}
     return string(T)
 end
 
+# Same thing, but with site types.
+function sitetypestring(st::SiteType{T}) where {T}
+    return string(T)
+end
+
 """
     sitenumber(i::Index)
 
@@ -159,8 +164,12 @@ The list is ordered corresponding to column-based vectorisation, i.e.
 with ``j ∈ {1,…,dim²}``. With this ordering,
 ``vec(A)ⱼ = tr(canonicalbasis(dim)[j]' * A)``.
 """
-function canonicalbasis(dim)
-    return [canonicalmatrix(i, j, dim) for (i, j) in [Base.product(1:dim, 1:dim)...]]
+function canonicalbasis(dim; columnmajor=true)
+    return if columnmajor
+        [canonicalmatrix(i, j, dim) for (i, j) in [Base.product(1:dim, 1:dim)...]]
+    else
+        [canonicalmatrix(j, i, dim) for (i, j) in [Base.product(1:dim, 1:dim)...]]
+    end
 end
 
 # (Von Neumann) Entropy

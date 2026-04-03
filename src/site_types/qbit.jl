@@ -60,4 +60,3 @@ function ITensors.op(::OpName"CCCCNOT", st::SiteType"Qubit")
            kron(proj1, proj1, proj1, proj0, id) +
            kron(proj1, proj1, proj1, proj1, not)
 end
-
