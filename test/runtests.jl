@@ -1,40 +1,82 @@
 using LindbladVectorizedTensors, ITensors, ITensorMPS, LinearAlgebra
 using Test
 
-function trace(x::MPS)
-    vid = MPS(siteinds(x), "vId")
-    return dot(vid, x)
+trace(x::MPS) = dot(MPS(siteinds(x), "Id"), x)
+
+function expect_trace(x::MPS, name::AbstractString)
+    # Valore atteso di A sullo stato ρ calcolato con ⟨V(1), V(A⋅) V(ρ)⟩
+    return [trace(apply(op(name * "⋅", siteinds(x), n), x)) for n in 1:length(x)]
+end
+
+function expect_vec(x::MPS, name::AbstractString)
+    # Valore atteso di A sullo stato ρ calcolato con ⟨V(ρ), V(A)⟩
+    return [
+        dot(x, MPS(ComplexF64, siteinds(x), j -> j == n ? name : "Id")) for n in 1:length(x)
+    ]
 end
 
 function gmat(v; dim=2)
+    # Reconstruct the matrix by its coefficients (in the Gell-Mann basis).
     sum(vi * b for (vi, b) in zip(v, LindbladVectorizedTensors.gellmannbasis(dim)))
 end
 
-@testset "Definition of S=1/2 states" begin
-    vs = siteind("vS=1/2")
-    s = siteind("S=1/2")
-    @test state(vs, "↑") == state(vs, "Up")
-    @test state(vs, "↓") == state(vs, "Dn")
+@testset "Left- and right-multiplication operators" begin
+    N = 4
+    sites = siteinds("vS=1/2", N)
+    x = random_mps(sites; linkdims=4)
+    # Note that we need to generate _real_ MPSs, since the states are Hermitian matrices
+    # hence linear combinations of Gell-Mann matrices with real coefficients.
+    # The tests fail if the MPS is complex.
 
-    @test gmat(vector(state(vs, "X+"))) ≈ 1/2 * (I + matrix(op(s, "σx")))
-    @test gmat(vector(state(vs, "X-"))) ≈ 1/2 * (I - matrix(op(s, "σx")))
-    @test gmat(vector(state(vs, "Y+"))) ≈ 1/2 * (I + matrix(op(s, "σy")))
-    @test gmat(vector(state(vs, "Y-"))) ≈ 1/2 * (I - matrix(op(s, "σy")))
-    @test gmat(vector(state(vs, "Z+"))) ≈ 1/2 * (I + matrix(op(s, "σz")))
-    @test gmat(vector(state(vs, "Z-"))) ≈ 1/2 * (I - matrix(op(s, "σz")))
-    @test gmat(vector(state(vs, "Z+"))) ≈ matrix(op(s, "ProjUp"))
-    @test gmat(vector(state(vs, "Z-"))) ≈ matrix(op(s, "ProjDn"))
+    @test expect_trace(x, "Sx") ≈ expect_vec(x, "Sx")
+    @test expect_trace(x, "Sy") ≈ expect_vec(x, "Sy")
+    @test expect_trace(x, "Sz") ≈ expect_vec(x, "Sz")
+
+    sites = siteinds("vBoson", N; dim=5)
+    x = random_mps(sites; linkdims=4)
+
+    @test expect_trace(x, "N") ≈ expect_vec(x, "N")
+    @test expect_trace(x, "X") ≈ expect_vec(x, "X")
+    @test expect_trace(x, "A") ≈ expect_vec(x, "A")
+
+    sites = siteinds("vFermion", N)
+    x = random_mps(sites; linkdims=4)
+
+    @test expect_trace(x, "N") ≈ expect_vec(x, "N")
+    @test expect_trace(x, "A") ≈ expect_vec(x, "A")
 end
 
-# Test that trace(..., x_vec) == dot(..., x_vec)
-# Sx_exp_vec = [trace(apply(op("Sy⋅", sites_vec, i), x_vec)) for i in 1:length(x_vec)]
-# Sy_exp_vec = [trace(apply(op("Sy⋅", sites_vec, i), x_vec)) for i in 1:length(x_vec)]
-# Sz_exp_vec = [trace(apply(op("Sy⋅", sites_vec, i), x_vec)) for i in 1:length(x_vec)]
-# Test that the vectorization is done correctly by measuring the expectation values of some
-# observables on a random state.
+@testset "Definition of vectorised states" verbose=true begin
+    @testset "S=1/2" begin
+        vs = siteind("vS=1/2")
+        s = siteind("S=1/2")
+        @test state(vs, "↑") == state(vs, "Up")
+        @test state(vs, "↓") == state(vs, "Dn")
 
-function expect_vec(x::MPS, name::AbstractString)
-    return [dot(MPS(siteinds(x), j -> j == n ? name : "Id"), x) for n in 1:length(x)]
+        @test gmat(vector(state(vs, "X+"))) ≈ 1/2 * (I + matrix(op(s, "σx")))
+        @test gmat(vector(state(vs, "X-"))) ≈ 1/2 * (I - matrix(op(s, "σx")))
+        @test gmat(vector(state(vs, "Y+"))) ≈ 1/2 * (I + matrix(op(s, "σy")))
+        @test gmat(vector(state(vs, "Y-"))) ≈ 1/2 * (I - matrix(op(s, "σy")))
+        @test gmat(vector(state(vs, "Z+"))) ≈ 1/2 * (I + matrix(op(s, "σz")))
+        @test gmat(vector(state(vs, "Z-"))) ≈ 1/2 * (I - matrix(op(s, "σz")))
+        @test gmat(vector(state(vs, "Z+"))) ≈ matrix(op(s, "ProjUp"))
+        @test gmat(vector(state(vs, "Z-"))) ≈ matrix(op(s, "ProjDn"))
+    end
+
+    @testset "Boson" begin
+        d = 5
+        vs = siteind("vBoson"; dim=d)
+
+        ρ = [state(vs, string(n-1)) for n in 1:d]
+        for n in 1:(d - 1)
+            @test apply(op("Adag⋅ * ⋅A", vs), ρ[n]) ≈ n * ρ[n + 1]
+        end
+
+        ω = 1/2 + rand()
+        β = 1 + 10rand()
+        ρT = state(vs, "ThermEq"; frequency=ω, temperature=1/β)
+        @test scalar(state(vs, "Id") * apply(op("N⋅", vs), ρT)) ≈ 1/expm1(β * ω)
+    end
 end
 
 @testset "Vectorisation of operators" verbose=true begin
@@ -50,6 +92,18 @@ end
         @test expect(x, "Sz") ≈ expect_vec(x_vec, "Sz")
     end
 
+    @testset "Boson" begin
+        N = 4
+        sites = siteinds("Boson", N; dim=6)
+        x = random_mps(ComplexF64, sites; linkdims=4)
+        x_vec = vec_projector(x)
+        sites_vec = siteinds(x_vec)
+
+        @test expect(x, "N") ≈ expect_vec(x_vec, "N")
+        @test expect(x, "X") ≈ expect_vec(x_vec, "X")
+        @test expect(x, "A") ≈ expect_vec(x_vec, "A")
+    end
+
     @testset "Qubit" begin
         sites = siteinds("Qubit", 4)
         x = random_mps(sites; linkdims=4)
@@ -57,10 +111,10 @@ end
         sites_vec = siteinds(x_vec)
 
         y_exp = expect(x, "Y")
-        y_exp_vec = [trace(apply(op("Y⋅", sites_vec, i), x_vec)) for i in 1:length(x_vec)]
+        y_exp_vec = expect_trace(x_vec, "Y")
 
         h_exp = expect(x, "H")
-        h_exp_vec = [trace(apply(op("H⋅", sites_vec, i), x_vec)) for i in 1:length(x_vec)]
+        h_exp_vec = expect_trace(x_vec, "H")
 
         angle = pi * rand()
         cp_exp = [
