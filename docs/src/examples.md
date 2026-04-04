@@ -1,4 +1,10 @@
-# GKSL equation
+# Examples
+
+In this section we will see two possible uses of this library: define the terms
+of a GKSL equation to use in a MPS-based time-evolution algorithm, and build the
+channels describing the execution of a noisy quantum circuit.
+ 
+## GKSL equation
 
 With the states and operators defined by this package, we can define a Lindbladian
 operator acting on density matrices in a GKSL equation.
@@ -81,3 +87,7 @@ operator:
 vec_id = MPS(s, "Id")
 trace = dot(vec_id, ρ)
 ```
+
+## Noisy quantum circuit
+
+_(coming soon...)_

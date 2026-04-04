@@ -12,9 +12,9 @@ makedocs(;
     authors="Davide Ferracin <davide.ferracin@protonmail.com> and contributors",
     pages=[
         "Home" => "index.md",
-        "New site types" => "included_site_types.md",
-        "Examples" => "gksl_example.md",
-        "Reference" => "physical_operators.md",
+        "New site types" => "site_types.md",
+        "Operations" => "operations.md",
+        "Examples" => "examples.md",
     ],
     format=Documenter.HTML(;
         mathengine=Documenter.MathJax3(
