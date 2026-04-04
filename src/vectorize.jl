@@ -162,10 +162,16 @@ function vec_projector(x::MPS; existing_sites=nothing)
 
     # Create a new set of indices, or use the one provided in the keyword argument.
     s_vec = if isnothing(existing_sites)
-        [siteind("v" * sitetypes[n]) for n in 1:N]
+        [
+            if dim(s[n]) > 2
+                siteind("v" * sitetypes[n]; dim=dim(s[n]))
+            else
+                siteind("v" * sitetypes[n])
+            end for n in 1:N
+        ]
     else
         if N != length(existing_sites)
-            throw(ArgumentError("Provided sites for the vectorized state are not \
+            throw(ArgumentError("provided sites for the vectorized state are not \
                                 compatible with the new MPS"))
         end
         existing_sites
