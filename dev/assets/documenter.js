@@ -83,6 +83,10 @@ window.MathJax = {
         "\\langle #1 \\rvert",
         1
       ],
+      "braket": [
+        "\\langle #1 \\vert #2 \\rangle",
+        2
+      ],
       "conj": [
         "\\bar{#1}",
         1
@@ -158,6 +162,10 @@ window.MathJax = {
       "phantomadj": [
         "^{\\vphantom{\\dagger}}"
       ],
+      "proj": [
+        "\\outp{#1}{#1}",
+        1
+      ],
       "sb": [
         "_{#1}",
         1
@@ -165,6 +173,10 @@ window.MathJax = {
       "set": [
         "\\{\\, #1 \\;\\vert\\; #2\\,\\}",
         2
+      ],
+      "spin": [
+        "S_{#1}",
+        1
       ],
       "spindown": [
         "\\downarrow"
