@@ -1,186 +1,255 @@
 # Site types included in this package
 
-This package extends the SiteType collection provided by ITensor, by defining types for
-(vectorized) density matrices associated to built-in and operators acting on them.
+This package introduces SiteTypes that allow working with MPS representing
+density matrices instead of pure states.
+These new SiteTypes are named by prefixing a `v` to the ITensor SiteType names.
+For example, if `siteinds("Boson", N)` defines a collection of site indices to
+create an MPS describing a pure state of a \\(N\\)-particle bosonic ensemble,
+with `siteinds("vBoson", N)` we can create an MPS describing a _mixed_ state of
+such an ensemble.
+This library defines the following new SiteTypes:
 
-For each of these site types, each operator from the "original", non-vectorized ITensor site
-type is promoted as a pre- or post-multiplication operator.
-In other words, if there exists an operator "A" for the "Fermion" type, then you will
-find operators "A⋅" and "⋅A" (the dot here is a `\cdot`) available for the "vFermion"
-site type.
+- "vS=1/2"
+- "vQubit"
+- "vBoson"
+- "vFermion"
+- "vElectron"
 
-Moreover, the `gkslcommutator` function allows you to easily define the unitary term (the
-commutator) in the GKSL equation: given a list of operator names and site indices,
-it returns an OpSum object representing the ``x\mapsto -i[A,x]`` map, for example
-```julia-repl
-julia> gkslcommutator("A", 1)
-sum(
-  0.0 - 1.0im A⋅(1,)
-  0.0 + 1.0im ⋅A(1,)
-)
+Contrary to the native ITensor types, these ones do not support at the moment
+the conservation of quantum numbers.
 
-julia> gkslcommutator("A", 1, "B", 3)
-sum(
-  0.0 - 1.0im A⋅(1,) B⋅(3,)
-  0.0 + 1.0im ⋅A(1,) ⋅B(3,)
-)
-```
-
-Operators are also vectorized, with the aim of computing expectation values: if
-``\{a_i\}_{i=1}^{d}`` and ``\{r_i\}_{i=1}^{d}`` are, respectively, the coordinates of
-the operator ``A`` and the state ``\rho`` with respect to the Gell-Mann basis, then the
-expectation value ``\operatorname{tr}(\rho A)`` is given by ``\sum_{i=1}^{d}\overline{a_i}r_i``.
-Below you can find some operators transformed this way: they are actually "states" in the
-ITensor formalism, even if they represent operators.
-Their operator names are usually obtained by prefixing a `v` to the original ITensor name.
+Internally, mixed states are represented as vectors by extracting their
+coordinates with respect to the Gell-Mann basis of the appropriate dimension.
+With mixed states, expectation values are given by the formula \\(\avg{A}\sb\rho
+= \tr(A \rho)\\), which is also the inner product between \\(\adj{A}\\) and
+\\(\rho\\) in the Hilbert space of linear operators (with respect to which the
+Gell-Mann basis is an orthonormal basis). In order to be able to compute these
+inner products, this package extends the meaning of “state” to include all
+linear operators, so that \\(\avg{A}\sb\rho\\) is computed as the inner
+product of the two “states” \\(\adj{A}\\) and \\(\rho\\).
+Operators acting on states, sometimes called “superoperators”, are described in
+the [Operations](@ref) section.
 
 ## "vS=1/2" SiteType
 
-Site indices with the "vS=1/2" site type represent the density matrix of a ``S=1/2`` spin,
-namely its coefficients with respect to the basis of 2x2 Gell-Mann matrices.
+Site indices with the "vS=1/2" site type represent the density matrix of a
+\\(S=1/2\\) spin.
 
-Making a single "vS=1/2" site or collection of N "vS=1/2" sites
+Making a single "vS=1/2" site or collection of \\(N\\) "vS=1/2" sites:
+
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> s = siteind("vS=1/2");
+
+julia> sites = siteinds("vS=1/2", N);
 ```
-s = siteind("vS=1/2")
-sites = siteinds("vS=1/2", N)
-```
 
-
-#### "vS=1/2" states
+### "vS=1/2" (actual) states
 
 The available state names for "vS=1/2" sites are:
-- `"Up"` spin in the ``|{\uparrow}\rangle\langle{\uparrow}|`` state
-- `"Dn"` spin in the ``|{\downarrow}\rangle\langle{\downarrow}|`` state
 
-#### "vS=1/2" vectorized operators
+- `"Up"` (aliases: `"↑"` and `"Z+"`) spin in the \\(\proj{\spinup}\\) state
+- `"Dn"` (aliases: `"↓"` and `"Z-"`) spin in the \\(\proj{\spindown}\\) state
+- `"X+"` spin in the \\(\proj{+}\\) state (projector on the +1 eigenstate of
+  \\(\spin{x}\\))
+- `"X-"` spin in the \\(\proj{-}\\) state (projector on the -1 eigenstate of
+  \\(\spin{x}\\))
+- `"Y+"` spin in the \\(\proj{\iu}\\) state (projector on the +1 eigenstate of
+  \\(\spin{y}\\))
+- `"Y-"` spin in the \\(\proj{-\iu}\\) state (projector on the -1 eigenstate of
+  \\(\spin{y}\\))
 
-Vectorized operators or associated with "vS=1/2" sites can be made using the `state`
-function, for example
-```
-Sx4 = state("vSx", s, 4)
-N3 = state("vN", sites[3])
-```
+### "vS=1/2" vectorised operators
 
-Spin operators:
-- `"vId"` Identity operator ``I_2``
-- `"vσx"` Pauli x matrix ``\sigma^x``
-- `"vσy"` Pauli y matrix ``\sigma^y``
-- `"vσz"` Pauli z matrix ``\sigma^z``
-- `"vSx"` Spin x operator ``S^x = \frac{1}{2} \sigma_x``
-- `"vSy"` Spin y operator ``S^y = \frac{1}{2} \sigma_y``
-- `"vSz"` Spin z operator ``S^z = \frac{1}{2} \sigma_z``
-- `"vN"` Number operator ``N = \frac{1}{2} (I_2+\sigma_z)``
+Vectorised operators for "vS=1/2" sites can be created using the `state`
+function as well, using as state name the `OpName` they would have for the
+"S=1/2" site type.
 
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> Sx = state("Sx", s);
 
-## "Osc" SiteType
-
-A SiteType representing a harmonic oscillator. It inherits definitions from the "Qudit"
-type.
-
-Available keyword arguments for customization:
-- `dim` (default: 2): dimension of the index (number of oscillator levels)
-For example:
-```
-sites = siteinds("Osc", N; dm=3)
+julia> N3 = state("N", sites[3]);
 ```
 
-#### "vOsc" Operators
+Available operators:
 
-Operators associated with "Osc" sites:
+- `"Id"` Identity operator \\(I\sb2\\)
+- `"σx"` (alias: `"X"`) Pauli X matrix \\(\sigma\sb{x}\\)
+- `"σy"` (alias: `"Y"`) Pauli Y matrix \\(\sigma\sb{y}\\)
+- `"σz"` (alias: `"Z"`) Pauli Z matrix \\(\sigma\sb{z}\\)
+- `"Sx"` Spin X operator \\(\spin{x} = \frac{1}{2} \sigma\sb{x}\\)
+- `"Sy"` Spin Y operator \\(\spin{y} = \frac{1}{2} \sigma\sb{y}\\)
+- `"Sz"` Spin Z operator \\(\spin{z} = \frac{1}{2} \sigma\sb{z}\\)
+- `"S+"` Spin raising operator \\(\spin{+} = \spin{x} + \iu\spin{y}\\)
+- `"S-"` Spin lowering operator \\(\spin{-} = \spin{x} - \iu\spin{y}\\)
+- `"N"` Number operator \\(N = \frac{1}{2} (I\sb2+\sigma\sb{z})\\)
 
-Single-oscillator operators:
-- `"A"` (aliases: `"a"`) annihilation operator
-- `"Adag"` (aliases: `"adag"`, `"a†"`) creation operator
-- `"Asum"` equal to ``a+a^\dagger``
-- `"X"` equal to ``\frac{1}{\sqrt{2}}(a^\dagger+a)``
-- `"Y"` equal to ``\frac{i}{\sqrt{2}}(a^\dagger-a)``
-- `"N"` (aliases: `"n"`) number operator
+## "vQubit" SiteType
 
+A SiteType representing the mixed state of a qubit.
 
-## "vOsc" SiteType
+Making a single "vQubit" site or collection of \\(N\\) "vQubit" sites:
 
-Available keyword arguments for customization:
-- `dim` (default: 2): dimension of the index (number of oscillator levels)
-For example:
-```
-sites = siteinds("vOsc", N; dim=4)
-```
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> s = siteind("vQubit");
 
-#### "vOsc" states
-
-States associated with "vOsc" sites.
-- "`n`", where `n` is an integer between `0` and `dim-1`, gives the Fock state
-  ``|n\rangle\langle n|``
-- `"ThermEq"`, with additional parameters `temperature` and `frequency`, gives the thermal
-  equilibrium (Gibbs) state ``\operatorname{tr}(\exp(-\frac{\omega}{T}
-N))\exp(-\frac{\omega}{T} N)``
-- `"X⋅ThermEq"`, with additional parameters `temperature` and `frequency`, gives the thermal
-  equilibrium state (as in the previous point) multiplied by ``X=\frac{1}{\sqrt{2}}(a^\dagger+a)`` on the left (this is not actually a state, but it is useful when computing the correlation function of the ``X`` operator)
-
-Example:
-```julia
-s = siteind("vOsc", N; dim=4)
-rho_eq = state("ThermEq", s; temperature=1.0, frequency=5.0)
-fock_st = state("3", s)
+julia> sites = siteinds("vQubit", N);
 ```
 
+### "vQubit" (actual) states
 
-#### "vOsc" Operators
+The available state names for "vQubit" sites are:
 
-Vectorized operators associated with "vOsc" sites.
+- `"0"` qubit in the \\(\proj{0}\\) state
+- `"1"` qubit in the \\(\proj{1}\\) state
 
-Single-oscillator operators (see the operator for "Osc" sites for their meaning):
-- `"vA"`
-- `"vAdag"`
-- `"vN"`
-- `"vX"`
-- `"vY"`
-- `"vId"`
+### "vQubit" vectorised operators
 
+Vectorised operators for "vQubit" sites can be created using the `state`
+function as well, using as state name the `OpName` they would have for the
+"Qubit" site type.
+
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> X = state("X", s);
+
+julia> H3 = state("H", sites[3]);
+```
+
+Available operators:
+
+- `"Id"` Identity operator \\(I\sb2\\)
+- `"X"` X gate
+- `"Y"` Y gate
+- `"Z"` Z gate
+- `"H"` Hadamard gate
+
+## "vBoson" SiteType
+
+Site indices with the "vBoson" site type represent the density matrix of a
+bosonic particle, or a harmonic oscillator (with a truncated, thus
+finite-dimensional Hilbert space).
+
+The keyword argument `dim` (default: 2) can be provided to specify the dimension
+of the index, i.e. the number of available energy levels plus one.
+
+Making a single "vBoson" site or collection of \\(N\\) "vBoson" sites:
+
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> s = siteind("vBoson");
+
+julia> sites = siteinds("vBoson", N; dim=4);
+```
+
+### "vBoson" (actual) states
+
+The available state names for "vBoson" sites are:
+
+- `"n"` (where `n` is an integer between `0` and `dim-1`) the projector on the
+  \\(n\\)-th level, \\(\proj{n}\\)
+- `"ThermEq"` the thermal equilibrium state \\(\frac{1}{Z}\exp(-\frac{\omega}{T}
+  N)\\); the \\(\omega\\) and \\(T\\) parameters can be given via the
+  `frequency` and `temperature` keyword arguments of the `state` function,
+  respectively
+
+Examples:
+
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> s = siteind("vBoson"; dim=4);
+
+julia> thermal_eq = state("ThermEq", s; temperature=1.0, frequency=5.0);
+
+julia> fock3 = state("3", s);
+```
+
+### "vBoson" vectorised operators
+
+Vectorised operators for "vBoson" sites can be created using the `state`
+function as well, using as state name the `OpName` they would have for the
+"Boson" site type.
+
+- `"A"` annihilation operator
+- `"Adag"` creation operator (beware that in the truncated space,
+  \\(\adj{a}\ket{d-1}=0\\))
+- `"X"` “real” quadrature \\(X=\frac{1}{\sqrt{2}}(\adj{a}+a)\\)
+- `"Y"` “imaginary” quadrature \\(Y=\frac{\iu}{\sqrt{2}}(\adj{a}-a)\\)
+- `"N"` number operator
+- `"Id"` identity operator
 
 ## "vFermion" SiteType
 
-Site indices with the "vFermion" SiteType represent spinless fermion sites with the states
-``|0\rangle``, ``|1\rangle``, corresponding to zero fermions or one fermion.
+Site indices with the "vFermion" SiteType represent spinless fermion sites with
+the states \\(\proj0\\), \\(\proj1\\), corresponding to the empty and the
+occupied state, respectively.
 
-#### "vFermion" states
+### "vFermion" (actual) states
 
-The available state names for "vFermion" sites are:
-- `"Emp"` unoccupied fermion site
-- `"Occ"` occupied fermion site
+Available state names for "vFermion" sites:
 
-#### "vFermion" operators
+- `"Emp"` (alias: `"Up"`) unoccupied fermion site
+- `"Occ"` (alias: `"Dn"`) occupied fermion site
 
-Vectorized operators associated with "vFermion" sites:
+### "vFermion" vectorised operators
 
-- `"vId"` Identity operator
-- `"vN"` Density operator
-- `"vA"` (aliases: `"va"`) Fermion annihilation operator
-- `"vAdag"` (aliases: `"vadag"`, `"vA†"`, `"va†"`) Fermion creation operator
+Vectorised operators associated with "vFermion" sites:
 
-Note that these creation and annihilation operators do not include Jordan-Wigner strings.
+- `"A"` (alias: `"a"`) annihilation operator
+- `"Adag"` (aliases: `"adag"`, `"A†"`, `"a†"`) creation operator
+- `"N"` number operator
+- `"F"` Jordan-Wigner string operator
+- `"Id"` identity operator
 
+!!! warning "Anti-commutativity not implemented"
+    The "vFermion" creation and annihilation operators do not account for
+    fermion anticommutation (like the `"A"` and `"Adag"` Fermion operators), in
+    that the Jordan-Wigner "F" operator is not automatically inserted by the
+    OpSum function when building a many-body Hamiltonian operator.
+    You will have to manually insert `"F"` where necessary to ensure the proper
+    definition of anti-commuting operators.
 
 ## "vElectron" SiteType
 
-The states of site indices with the "vElectron" SiteType correspond to
-``|0\rangle``, ``|{\uparrow}\rangle``, ``|{\downarrow}\rangle``, ``|{\uparrow\downarrow}\rangle``.
+The basis states of site indices with the "vElectron" SiteType correspond to
+\\(\proj0\\), \\(\proj{\spinup}\\), \\(\proj{\spindown}\\) and
+\\(\proj{\spinup\spindown}\\).
 
-#### "vElectron" states
+Making a single "vElectron" site or collection of \\(N\\) "vElectron" sites:
+
+```jldoctest sitetypes; setup = :(using ITensors, ITensorMPS; N = 4)
+julia> s = siteind("vElectron");
+
+julia> sites = siteinds("vElectron", N);
+```
+
+### "vElectron" (actual) states
 
 The available state names for "vElectron" sites are:
+
 - `"Emp"` unoccupied electron site
 - `"Up"` electron site occupied with one up electron
 - `"Dn"` electron site occupied with one down electron
 - `"UpDn"` electron site occupied with two electrons (one up, one down)
 
-#### "vElectron" operators
+### "vElectron" vectorised operators
 
-Vectorized operators associated with "vElectron" sites:
+Vectorised operators associated with "vElectron" sites:
 
-- `"vId"` Identity operator
-- `"vNtot"` Total density operator
-- `"vNup"` Up density operator
-- `"vNdn"` Down density operator
-- `"vNupNdn"` Product of `n↑` and `n↓`
+- `"Aup"` up-spin annihilation operator
+- `"Adagup"` up-spin creation operator
+- `"Adn"` down-spin annihilation operator
+- `"Adagdn"` down-spin creation operator
+- `"Fup"` up-spin Jordan-Wigner string operator
+- `"Fdn"` down-spin Jordan-Wigner string operator
+- `"F"` Jordan-Wigner string operator
+- `"Nup"` number of up-spin electrons
+- `"Ndn"` number of down-spin electrons
+- `"Ntot"` total number operator, \\(N\sb+ + N\sb-\\)
+- `"NupNdn"` product of \\(N\sb+\\) and \\(N\sb-\\)
+- `"Id"` identity operator
 
+!!! warning "Anti-commutativity not implemented"
+    The "vElectron" creation and annihilation operators do not account for
+    fermion anticommutation (like the `"Aup"`, `"Adn"`, `"Adagup"` and
+    `"Adagdn"` Electron operators), in that the Jordan-Wigner "F" operator is
+    not automatically inserted by the OpSum function when building a many-body
+    Hamiltonian operator.
+    You will have to manually insert `"F"` (or `"Fup"` and `"Fdn"`) where
+    necessary to ensure the proper definition of anti-commuting operators.

@@ -40,6 +40,8 @@ ITensors.state(sn::StateName"Adagup", st::SiteType"vElectron") = vop(sn, st)
 ITensors.state(sn::StateName"Adn", st::SiteType"vElectron") = vop(sn, st)
 ITensors.state(sn::StateName"Adagdn", st::SiteType"vElectron") = vop(sn, st)
 ITensors.state(sn::StateName"F", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Fup", st::SiteType"vElectron") = vop(sn, st)
+ITensors.state(sn::StateName"Fdn", st::SiteType"vElectron") = vop(sn, st)
 
 function ITensors.state(::StateName"AupF", ::SiteType"vElectron")
     return vec(

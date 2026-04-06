@@ -1,5 +1,9 @@
-using LindbladVectorizedTensors, ITensors, ITensorMPS, LinearAlgebra
-using Test
+using Test, Documenter, LindbladVectorizedTensors
+using ITensors, ITensorMPS, LinearAlgebra
+
+@testset "Documentation examples" begin
+    doctest(LindbladVectorizedTensors; manual=false)
+end
 
 trace(x::MPS) = dot(MPS(siteinds(x), "Id"), x)
 
