@@ -75,7 +75,10 @@ end
         ω = 1/2 + rand()
         β = 1 + 10rand()
         ρT = state(vs, "ThermEq"; frequency=ω, temperature=1/β)
-        @test scalar(state(vs, "Id") * apply(op("N⋅", vs), ρT)) ≈ 1/expm1(β * ω)
+        # Watch out! The average number of bosons here is not exactly 1/expm1(β*ω) because
+        # the Hilbert space is truncated at the d-th level.
+        avgn = sum(n * exp(-β*ω*n) for n in 0:(d - 1)) / sum(exp(-β*ω*n) for n in 0:(d - 1))
+        @test scalar(state(vs, "Id") * apply(op("N⋅", vs), ρT)) ≈ avgn
     end
 end
 
