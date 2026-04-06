@@ -36,6 +36,7 @@ makedocs(;
                         :avg => [raw"\langle #1\rangle", 1],
                         :blank => [raw"{-}"],
                         :bra => [raw"\langle #1 \rvert", 1],
+                        :braket => [raw"\langle #1 \vert #2 \rangle", 2],
                         :conj => [raw"\bar{#1}", 1],
                         :defeq => [raw"\mathrel{\mathop:}="],
                         :diag => [raw"\operatorname{diag}"],
