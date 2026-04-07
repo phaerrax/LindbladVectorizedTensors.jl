@@ -74,9 +74,10 @@ the \\(\rho \mapsto -\iu [A,\rho]\\) “superoperator”: this is the
 `gkslcommutator` function.
 
 Given a list of operator names and integers, in an alternating fashion like
-`"A1, n1, A2, n2, ..."` it returns an OpSum object that represents the
-\\(-\iu[A,\blank]\\) map where \\(A\\) is the product of `A1` on site `n1`, `A2`
-on site `n2` and so on, in a similar syntax as OpSum itself.  For example,
+`"A1, n1, A2, n2, ..."`, the `gkslcommutator` function returns an OpSum object
+that represents the \\(-\iu[A,\blank]\\) map where \\(A\\) is the product of
+`A1` on site `n1`, `A2` on site `n2` and so on, in a similar syntax as OpSum
+itself.  For example,
 
 ```jldoctest operations
 julia> gkslcommutator("A", 1)
@@ -96,7 +97,21 @@ sum(
 These OpSum objects can then be turned into MPOs with the usual syntax
 `MPO(opsum, sites)`.
 
-In a slightly more complicated example, consider the Hamiltonian operator
+If we also provide an array of site indices, we can use the
+`gkslcommutator_itensor` function, that directly gives us an ITensor object.
+
+```jldoctest operations; filter = r"id=\d+" => "id=#"
+julia> sites = siteinds("vS=1/2", 3);
+
+julia> gkslcommutator_itensor(sites, "Sx", 2)
+ITensor ord=2 (dim=4|id=652|"Site,n=2,vS=1/2")' (dim=4|id=652|"Site,n=2,vS=1/2")
+NDTensors.Dense{ComplexF64, Vector{ComplexF64}}
+
+```
+
+### Example: GKSL equation
+
+Consider the Hamiltonian operator
 
 ```math
 H = \sum_{n=1}^{N} \omega_n\phantomadj \adj{a_n} a_n\phantomadj

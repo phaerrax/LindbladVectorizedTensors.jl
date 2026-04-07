@@ -9,12 +9,14 @@ function makeopsumpairs(args...)
 end
 
 """
-    gkslcommutator(operators::Tuple{String,Int}...)
+    gkslcommutator(ops::Tuple{AbstractString,Int}...)
+    gkslcommutator(ops...)
 
-Given one or more tuples `(a1, n1), (a2, n2), …`, return an OpSum representing the operation
-``x ↦ -i[A_1 A_2 …, x]`` where ``A_i`` is an operator which consists of `ai` at site `ni`
-and the identity elsewhere. The string `a1` must be an existing ITensor OpName whose
-variants `a1⋅` and `⋅a1` are defined (this function, however, doesn't perform any checks).
+Given one or more tuples `(a1, n1), (a2, n2), …`, or alternatively a sequence `a1, n1, a2,
+n2, …` where each `ai` is a `String` and each `ni` is an `Int`, return an OpSum representing
+the operation ``x ↦ -i[A_1 A_2 …, x]`` where ``A_i`` is an operator which consists of `ai`
+on the site `ni` and the identity elsewhere. Each string `ai` must be the name of an
+existing ITensor operator (this function however does not perform any check).
 
 # Examples
 ```julia-repl
@@ -23,9 +25,18 @@ sum(
   0.0 - 1.0im σ+⋅(1,) σ-⋅(2,)
   0.0 + 1.0im ⋅σ+(1,) ⋅σ-(2,)
 )
+
+julia> gkslcommutator("A", 3, "Adag", 5)
+sum(
+  0.0 - 1.0im A⋅(3,) Adag⋅(5,)
+  0.0 + 1.0im ⋅A(3,) ⋅Adag(5,)
+)
+
 ```
 """
-function gkslcommutator(operators::Tuple{String,Int}...)
+function gkslcommutator end
+
+function gkslcommutator(operators::Tuple{AbstractString,Int}...)
     l = OpSum()
     opnames = first.(operators)
     sites = last.(operators)
@@ -34,54 +45,50 @@ function gkslcommutator(operators::Tuple{String,Int}...)
     return l
 end
 
-"""
-    gkslcommutator(args...)
-
-Given a sequence `a1, n1, a2, n2, …` where each `ai` is a `String` and each `ni` is an
-`Int`, return an OpSum representing the operation ``x ↦ -i[A_1 A_2 …, x]`` where ``A_i``
-is an operator which consists of `ai` at site `ni` and the identity elsewhere. The string
-`a1` must be an existing ITensor OpName whose variants `a1⋅` and `⋅a1` are defined
-(this function, however, doesn't perform any checks).
-
-# Examples
-```julia-repl
-julia> gkslcommutator("σ+", 1, "σ-", 2)
-sum(
-  0.0 - 1.0im σ+⋅(1,) σ-⋅(2,)
-  0.0 + 1.0im ⋅σ+(1,) ⋅σ-(2,)
-)
-```
-"""
 gkslcommutator(args...) = gkslcommutator(makeopsumpairs(args...)...)
 
 """
-    gkslcommutator_itensor(sites::Vector{<:Index}, operators::Tuple{String,Int}...)
+    gkslcommutator_itensor(s::Vector{<:Index}, ops::Tuple{String,Int}...)
+    gkslcommutator_itensor(s::Vector{<:Index}, ops...)
 
-Given a vector of ITensors site indices `sites` and a sequence `a1, n1, a2, n2, …` where
-each `ai` is a `String` and each `ni` is an `Int`, return an ITensor with the site indices
-`s[n1]`, `s[n1]'`, `s[n2]`, `s[n2]'` and so on which represents the operation
-``x ↦ -i[A_1 A_2 …, x]`` where ``A_i`` is an operator consisting of `ai` at site
-`ni` and the identity elsewhere. Each `ai` string must be an existing ITensors OpName whose
-variants `a1⋅` and `⋅a1` are defined (this function, however, doesn't perform any checks).
-
+Given a vector of ITensors site indices `s` and a sequence `a1, n1, a2, n2, …`, where each
+`ai` is a string and each `ni` is an integer, return an ITensor with site indices
+`s[n1]`, `s[n1]'`, `s[n2]`, `s[n2]'` and so on, which represents the operation ``x ↦ -i[A_1
+A_2 …, x]``, where ``A_i`` is an operator consisting of `ai` acting on site `ni` and the
+identity elsewhere. Each `ai` string must be the name of an existing ITensor operator of
+the respective non-vectorised site type(s).
 
 # Examples
 
 We start from a system of three 1/2-spins:
-```julia
-sites = siteinds("vS=1/2", 3)
+
+```julia-repl
+julia> sites = siteinds("vS=1/2", 3)
+3-element Vector{Index{Int64}}:
+ (dim=4|id=...|"Site,n=1,vS=1/2")
+ (dim=4|id=...|"Site,n=2,vS=1/2")
+ (dim=4|id=...|"Site,n=3,vS=1/2")
+
 ```
 
-Take an operator ``U`` which is ``Sˣ`` on the second site and the identity on the
+Take an operator ``U`` which is made up of ``Sx`` on the second site and the identity on the
 others. The commutator ``ρ ↦ -i[U,ρ]`` is given by
-```julia
-gkslcommutator_itensor(sites, "Sx", 2)
+
+```julia-repl
+julia> gkslcommutator_itensor(sites, "Sx", 2)
+ITensor ord=2 (dim=4|id=...|"Site,n=2,vS=1/2")' (dim=4|id=...|"Site,n=2,vS=1/2")
+NDTensors.Dense{ComplexF64, Vector{ComplexF64}}
+
 ```
 
 An operator ``V`` which is ``Sy`` on the first site, the identity on the second one, and
 ``Sz`` on the third one. The commutator ``ρ ↦ -i[V,ρ]`` is given by
-```julia
-gkslcommutator_itensor(sites, "Sy", 1, "Sz", 3)
+
+```julia-repl
+julia> gkslcommutator_itensor(sites, "Sy", 1, "Sz", 3)
+ITensor ord=4 (dim=4|id=...|"Site,n=1,vS=1/2")' (dim=4|id=...|"Site,n=1,vS=1/2") (dim=4|id=...|"Site,n=3,vS=1/2")' (dim=4|id=...|"Site,n=3,vS=1/2")
+NDTensors.Dense{ComplexF64, Vector{ComplexF64}}
+
 ```
 """
 function gkslcommutator_itensor(sites::Vector{<:Index}, operators::Tuple{String,Int}...)
@@ -104,11 +111,23 @@ function gkslcommutator_itensor(sites::Vector{<:Index}, operators::Tuple{String,
     return -im * (lmult - rmult)
 end
 
-function gkslcommutator_itensor(sites::Vector{<:Index}, args...)
-    return gkslcommutator_itensor(sites, makeopsumpairs(args...)...)
-end
-
 #=
+FIXME This functions does not work unless the tuple with the keyword arguments is empty (in
+which case this method is kind of useless): define for example
+
+julia> ITensors.op(::OpName"rX", st::SiteType"Qubit"; x) = cis(x) * op(OpName("X"), st)
+
+and try running:
+
+julia> gkslcommutator_itensor(vs, ("rX", (x=4)), 3)
+ERROR: syntax: invalid named tuple element ""rX"" around REPL[20]:1
+Stacktrace:
+ [1] top-level scope
+   @ REPL[20]:1
+
+We need to rethink how to handle keyword arguments. For now let's disable this variant.
+
+===============
 Some gates require parameters. We need to pass these parameters to gkslcommutator_itensor
 as well, if we want to build the commutator.
 
@@ -150,7 +169,6 @@ above, so by (another!) tuple:
 The second and third argument of `gkslcommutator_itensor` here (try this on the REPL!) are
 Tuple{Tuple{String, Any}, Int} items. The new signature should maybe then be
     gkslcommutator_itensor(::Vector{<:Index}, ::Tuple{Tuple{String, Any},Int}...).
-=#
 
 function gkslcommutator_itensor(
     sites::Vector{<:Index}, items::Tuple{Tuple{String,Any},Int}...
@@ -179,7 +197,8 @@ function gkslcommutator_itensor(
     end
     return -im * (lmult - rmult)
 end
+=#
 
-#function gkslcommutator_itensor(sites::Vector{<:Index}, args...)
-#    return gkslcommutator_itensor(sites, makeopsumpairs(args...)...)
-#end
+function gkslcommutator_itensor(sites::Vector{<:Index}, args...)
+    return gkslcommutator_itensor(sites, makeopsumpairs(args...)...)
+end
