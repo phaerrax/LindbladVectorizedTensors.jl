@@ -2,7 +2,7 @@ using Documenter
 using LindbladVectorizedTensors
 
 # doctest dependencies
-using ITensors, ITensorMPS
+using ITensors, ITensorMPS, Plots
 
 makedocs(;
     modules=[LindbladVectorizedTensors],
