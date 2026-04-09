@@ -12,4 +12,4 @@ Features of this package include:
 
 See [Site types included in this package](@ref) for a complete list of the new
 site types introduced in this package [Operations](@ref) for how to use the
-vectorised types and [Examples](@ref) for some tutorials.
+vectorised types and the Examples section for some tutorials.

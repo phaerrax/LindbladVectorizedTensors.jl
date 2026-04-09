@@ -14,7 +14,7 @@ makedocs(;
         "Home" => "index.md",
         "New site types" => "site_types.md",
         "Operations" => "operations.md",
-        "Examples" => "examples.md",
+        "Examples" => ["example_gksl.md"],
     ],
     format=Documenter.HTML(;
         mathengine=Documenter.MathJax3(
@@ -41,6 +41,7 @@ makedocs(;
                         :defeq => [raw"\mathrel{\mathop:}="],
                         :diag => [raw"\operatorname{diag}"],
                         :dissipator => [raw"\mathscr{D}"],
+                        :eu => [raw"\mathrm{e}"],
                         :fcomm => [raw"\{#1\}", 1],
                         :id => [raw"1"],
                         :imat => [raw"I_{#1}", 1, ""],
