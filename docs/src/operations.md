@@ -179,3 +179,47 @@ sum(
 )
 
 ```
+
+## The adjoint map
+
+Another common operation on mixed states is \\(\rho \mapsto X \rho \adj{X}\\),
+where \\(X\\) is some operator. For example, in the definition of the
+dissipation terms in the GKSL equation (see the [relative example](@ref "GKSL
+equation") we have \\(a\sb{n}\phantomadj \rho \adj{a\sb{n}}\\), which can be
+simply written as `apply(op("A⋅ * ⋅Adag", s, n), ρ)`, where `s` is the list of
+Index object that `ρ` is defined on.
+This was straightforward because the `A` and `Adag` operators are already
+defined, but not all operators have their adjoint available in the library.
+
+The `adjointmap_itensor` [^adjointname] function provides a convenient way of
+creating the tensor representing the above map for any operator that can be
+called on the non-vectorised site type.  The syntax is similar to the one of the
+`op` function: for example, we can write
+
+```jldoctest operations
+julia> s = siteinds("vQubit", 6);
+
+julia> ρ = MPS(s, "0");
+
+julia> apply(adjointmap_itensor("CNOT", s[1], s[2]), ρ);
+
+julia> apply(adjointmap_itensor("Rx", s, 5; θ=1/2), ρ);
+
+julia> apply(adjointmap_itensor("Rx", s, 5; θ=pi/3), ρ);
+
+```
+
+We did not need to define the adjoint of "Rx": the `adjointmap_itensor` already
+takes care of computing it internally, without defining a new operator.
+The function automatically computes the adjoint of the given operator and
+creates the tensor corresponding to the vectorisation of the \\(\rho \mapsto X
+\rho \adj{X}\\) map, that can then be applied to MPSs or other ITensors.
+
+!!! warning "Only available for the `vQubit` site tipe"
+    At the time of writing this, the `adjointmap_itensor` function is available
+    only for `vQubit` sites.
+
+[^adjointname]: The name of this function comes from the similarity of this map
+to the [adjoint representation]
+(https://en.wikipedia.org/wiki/Adjoint_representation) of a group (typically a
+Lie group).
