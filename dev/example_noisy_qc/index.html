@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Noisy quantum computer · LindbladVectorizedTensors.jl</title><meta name="title" content="Noisy quantum computer · LindbladVectorizedTensors.jl"/><meta property="og:title" content="Noisy quantum computer · LindbladVectorizedTensors.jl"/><meta property="twitter:title" content="Noisy quantum computer · LindbladVectorizedTensors.jl"/><meta name="description" content="Documentation for LindbladVectorizedTensors.jl."/><meta property="og:description" content="Documentation for LindbladVectorizedTensors.jl."/><meta property="twitter:description" content="Documentation for LindbladVectorizedTensors.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">LindbladVectorizedTensors.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../site_types/">New site types</a></li><li><a class="tocitem" href="../operations/">Operations</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../example_gksl/">GKSL equation</a></li><li class="is-active"><a class="tocitem" href>Noisy quantum computer</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Noisy quantum computer</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Noisy quantum computer</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/phaerrax/LindbladVectorizedTensors.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/phaerrax/LindbladVectorizedTensors.jl/blob/main/docs/src/example_noisy_qc.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Noisy-quantum-computer"><a class="docs-heading-anchor" href="#Noisy-quantum-computer">Noisy quantum computer</a><a id="Noisy-quantum-computer-1"></a><a class="docs-heading-anchor-permalink" href="#Noisy-quantum-computer" title="Permalink"></a></h1><p>With the states and operators defined by this package, we can describe the execution of a circuit on a noisy quantum computer.</p><p>We will run a circuit implementing the quantum Fourier transform on \(N=5\) qubits, as in the following picture.</p><p><img src="../qft.png" alt="QFT circuit"/></p><p>We will use Hadamard gates and controlled phase gates \(R_k\) for \(k \in \{2, \dotsc, N\}\). All these gates are already defined in ITensor.  (We follow the ITensor convention where the first site denotes the control qubit.)</p><p>Let&#39;s first look how the circuit would be implemented in the noiseless case, acting on a pure state. We create \(N\) sites with the &quot;Qubit&quot; site type, the initial zero state, then we apply the gates in the required sequence.</p><pre><code class="language-julia-repl hljs">julia&gt; N = 5; s = siteinds(&quot;Qubit&quot;, N);
+
+julia&gt; ψ = MPS(s, &quot;0&quot;);
+
+julia&gt; gate_subseq(k, N) = [
+           op(&quot;H&quot;, s[k]);
+           [op(&quot;Cphase&quot;, s[k+n], s[k]; ϕ=2pi/(2^(n+1))) for n in 1:(N-k)]...
+       ];
+
+julia&gt; gate_seq = vcat([gate_subseq(k, N) for k in 1:N]...);
+</code></pre><p>Executing the circuit is just a matter of calling <code>apply</code> on the MPS with the list of gates.</p><pre><code class="language-julia-repl hljs">julia&gt; ψₒᵤₜ = apply(gate_seq, ψ)
+5-element MPS:
+ ((dim=2|id=430|&quot;Qubit,Site,n=1&quot;), (dim=2|id=33|&quot;Link,l=1&quot;))
+ ((dim=2|id=174|&quot;Qubit,Site,n=2&quot;), (dim=2|id=33|&quot;Link,l=1&quot;), (dim=4|id=719|&quot;Link,l=2&quot;))
+ ((dim=2|id=263|&quot;Qubit,Site,n=3&quot;), (dim=4|id=719|&quot;Link,l=2&quot;), (dim=4|id=80|&quot;Link,l=3&quot;))
+ ((dim=2|id=197|&quot;Qubit,Site,n=4&quot;), (dim=4|id=80|&quot;Link,l=3&quot;), (dim=2|id=924|&quot;Link,l=4&quot;))
+ ((dim=2|id=705|&quot;Qubit,Site,n=5&quot;), (dim=2|id=924|&quot;Link,l=4&quot;))
+</code></pre><p>Let&#39;s do the same, but with a density matrix. We will start by running the noiseless circuit, just to get a feeling of how it can be done.</p><pre><code class="language-julia-repl hljs">julia&gt; s_vec = siteinds(&quot;vQubit&quot;, N);
+
+julia&gt; ρ = MPS(s_vec, &quot;0&quot;);
+
+julia&gt; gate_subseq_vec(k, N) = [
+           adjointmap_itensor(&quot;H&quot;, s_vec[k]);
+           [adjointmap_itensor(&quot;Cphase&quot;, s_vec[k+n], s_vec[k]; ϕ=2pi/(2^(n+1)))
+            for n in 1:(N-k)]...
+       ];
+
+julia&gt; gate_seq_vec = vcat([gate_subseq_vec(k, N) for k in 1:N]...);
+
+julia&gt; ρₒᵤₜ = apply(gate_seq_vec, ρ)
+5-element MPS:
+ ((dim=4|id=51|&quot;Site,n=1,vQubit&quot;), (dim=4|id=492|&quot;Link,l=1&quot;))
+ ((dim=4|id=479|&quot;Site,n=2,vQubit&quot;), (dim=4|id=492|&quot;Link,l=1&quot;), (dim=16|id=858|&quot;Link,l=2&quot;))
+ ((dim=4|id=696|&quot;Site,n=3,vQubit&quot;), (dim=16|id=858|&quot;Link,l=2&quot;), (dim=16|id=302|&quot;Link,l=3&quot;))
+ ((dim=4|id=818|&quot;Site,n=4,vQubit&quot;), (dim=16|id=302|&quot;Link,l=3&quot;), (dim=4|id=298|&quot;Link,l=4&quot;))
+ ((dim=4|id=720|&quot;Site,n=5,vQubit&quot;), (dim=4|id=298|&quot;Link,l=4&quot;))
+</code></pre><p>Since the gates act on the density matrix \(\rho\) as \(X\rho\adj{X}\), we have replaced the <code>op</code> function in <code>gate_seq</code> with <code>adjointmap_itensor</code>, a function defined in this package that returns a tensor representing the (vectorisation of the) map \(\rho \mapsto X\rho\adj{X}\) for a given \(X\).</p><p>We can check that the two results are the same state by using the <code>vec_projector</code> function, that turns the MPS of a pure state \(\ket\psi\) into the MPS of the vectorisation of \(\proj\psi\):</p><pre><code class="language-julia-repl hljs">julia&gt; vec_ψₒᵤₜ = vec_projector(ψₒᵤₜ; existing_sites=siteinds(ρₒᵤₜ))
+5-element MPS:
+ ((dim=1|id=453|&quot;Link,l=1&quot;), (dim=4|id=51|&quot;Site,n=1,vQubit&quot;))
+ ((dim=1|id=973|&quot;Link,l=2&quot;), (dim=1|id=453|&quot;Link,l=1&quot;), (dim=4|id=479|&quot;Site,n=2,vQubit&quot;))
+ ((dim=1|id=490|&quot;Link,l=3&quot;), (dim=1|id=973|&quot;Link,l=2&quot;), (dim=4|id=696|&quot;Site,n=3,vQubit&quot;))
+ ((dim=1|id=404|&quot;Link,l=4&quot;), (dim=1|id=490|&quot;Link,l=3&quot;), (dim=4|id=818|&quot;Site,n=4,vQubit&quot;))
+ ((dim=1|id=404|&quot;Link,l=4&quot;), (dim=4|id=720|&quot;Site,n=5,vQubit&quot;))
+
+julia&gt; vec_ψₒᵤₜ ≈ ρₒᵤₜ
+true
+</code></pre><p>Let&#39;s also check that the trace of the state has actually been preserved, and that it is still a pure state. For the trace, we define an appropriate function like in the <a href="../example_gksl/#GKSL-equation">GKSL equation</a> example, while the purity is given by the 2-norm of the MPS, since \(\tr(\rho^2)\) corresponds to the inner product of \(\rho\) with itself. (We cut the imaginary part away since we know that it is supposed to be zero, but we check it anyway in case something goes wrong.)</p><pre><code class="language-julia-repl hljs">julia&gt; function trace(x::MPS)
+           t = dot(MPS(siteinds(x), &quot;Id&quot;), x)
+           t ≈ real(t) || @warn &quot;Trace is not real&quot;
+           return real(t)
+       end;
+
+julia&gt; function purity(x::MPS)
+           p = dot(x, x);
+           p ≈ real(p) || @warn &quot;Purity is not real&quot;
+           return real(p)
+       end;
+
+julia&gt; trace(ρₒᵤₜ) ≈ 1
+true
+
+julia&gt; purity(ρₒᵤₜ) ≈ 1
+true
+</code></pre><p>Now we add a depolarising noise channel after each gate, acting locally on the qubits affected by the gate.  We use its Kraus decomposition</p><p class="math-container">\[\begin{gather*}
+    D_\lambda(\rho) =
+    \sum_{i=0}^{3} K_i\phantomadj \rho \adj{K_i},\\
+    K_0 = \sqrt{1-\frac{3\lambda}{4}} \imat[2],\quad
+    K_1 = \sqrt{\frac{\lambda}{4}} \sigma_x,\quad
+    K_2 = \sqrt{\frac{\lambda}{4}} \sigma_y,\quad
+    K_3 = \sqrt{\frac{\lambda}{4}} \sigma_z.
+\end{gather*}\]</p><p>and arbitrarily choose \(\lambda=0.05\).</p><pre><code class="language-julia-repl hljs">julia&gt; function depolarising_ch(λ, s::Index)
+           @assert 0 ≤ λ ≤ 1 + 1/3
+           return (1 - 3λ/4) * op(&quot;Id&quot;, s) +
+                  λ/4 * adjointmap_itensor(&quot;X&quot;, s) +
+                  λ/4 * adjointmap_itensor(&quot;Y&quot;, s) +
+                  λ/4 * adjointmap_itensor(&quot;Z&quot;, s)
+       end;
+
+julia&gt; noise = [reduce(*, depolarising_ch(0.05, si) for si in gate_sites)
+                for gate_sites in inds.(gate_seq_vec; tags=&quot;Site&quot;, plev=0)];
+</code></pre><p>We built the <code>noise</code> list by getting the site indices of each gate (<code>gate_sites</code>) and then taking the product of a depolarising channel on each of those sites.</p><p>We now combine the <code>gate_seq_vec</code> and the <code>noise</code> operators, alternating them:</p><pre><code class="language-julia-repl hljs">julia&gt; gate_seq_vec_noisy = collect(Iterators.flatten(zip(gate_seq_vec, noise)));
+
+julia&gt; ρₒᵤₜ_noisy = apply(gate_seq_vec_noisy, ρ)
+5-element MPS:
+ ((dim=4|id=51|&quot;Site,n=1,vQubit&quot;), (dim=4|id=492|&quot;Link,l=1&quot;))
+ ((dim=4|id=479|&quot;Site,n=2,vQubit&quot;), (dim=4|id=492|&quot;Link,l=1&quot;), (dim=16|id=858|&quot;Link,l=2&quot;))
+ ((dim=4|id=696|&quot;Site,n=3,vQubit&quot;), (dim=16|id=858|&quot;Link,l=2&quot;), (dim=16|id=302|&quot;Link,l=3&quot;))
+ ((dim=4|id=818|&quot;Site,n=4,vQubit&quot;), (dim=16|id=302|&quot;Link,l=3&quot;), (dim=4|id=298|&quot;Link,l=4&quot;))
+ ((dim=4|id=720|&quot;Site,n=5,vQubit&quot;), (dim=4|id=298|&quot;Link,l=4&quot;))
+</code></pre><p>Now the purity of the state has decreased, as a consequence of the noise, while its trace is still, of course, 1.</p><pre><code class="language-julia-repl hljs">julia&gt; trace(ρₒᵤₜ_noisy) ≈ 1
+true
+
+julia&gt; purity(ρₒᵤₜ_noisy)
+0.32053886090015327
+</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../example_gksl/">« GKSL equation</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 11 April 2026 16:54">Saturday 11 April 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

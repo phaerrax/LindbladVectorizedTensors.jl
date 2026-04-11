@@ -100,6 +100,9 @@ window.MathJax = {
       "dissipator": [
         "\\mathscr{D}"
       ],
+      "eu": [
+        "\\mathrm{e}"
+      ],
       "fcomm": [
         "\\{#1\\}",
         1
