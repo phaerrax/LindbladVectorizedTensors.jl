@@ -221,13 +221,13 @@ julia> avgn(ω, T) = 1 / expm1(ω/T);
 julia> function D(n)
             d1 = (avgn(ω[n], T) + 1) * (
                op("A⋅ * ⋅Adag", s, n) -
-               0.5 * apply(op("Adag⋅", s, n), op("A⋅", s, n)) -
-               0.5 * apply(op("⋅A", s, n), op("⋅Adag", s, n))
+               0.5 * op("Adag⋅ * A⋅", s, n) -
+               0.5 * op("⋅A * ⋅Adag", s, n)
            );
            d2 = avgn(ω[n], T) * (
                op("Adag⋅ * ⋅A", s, n) -
-               0.5 * apply(op("A⋅", s, n), op("Adag⋅", s, n)) -
-               0.5 * apply(op("⋅Adag", s, n), op("⋅A", s, n))
+               0.5 * op("A⋅ * Adag⋅", s, n) -
+               0.5 * op("⋅Adag * ⋅A", s, n)
            );
            return γ * (d1 + d2);
        end;
@@ -238,11 +238,9 @@ julia> function D(n)
     Notice how we had to write the right-multiplication operators: in order to
     have \\(\rhoXY\\), we need to right-multiply first by \\(X\\) and then by
     \\(Y\\), which in ITensor language means that the operator acting on
-    \\(\rho\\) is `apply(op("⋅Y", ...), op("⋅X", ...))`, since composition is
-    done in the usual order from right to left. We also need to use `apply` in
-    order to obtain the operator composition: if we simply multiplied the two
-    operators together, the result would have been a scalar since ITensor would
-    have contracted all the indices.
+    \\(\rho\\) is `op("⋅Y * ⋅X", ...)` (which corresponds to `apply(op("⋅Y",
+    ...), op("⋅X", ...))`) since composition is done in the usual
+    order from right to left.
 
 Now we reset the state to its initial value, and add the non-unitary terms to
 the time-evolution operator, spreading them equally among the factors.
