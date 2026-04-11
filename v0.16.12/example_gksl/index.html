@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>GKSL equation · LindbladVectorizedTensors.jl</title><meta name="title" content="GKSL equation · LindbladVectorizedTensors.jl"/><meta property="og:title" content="GKSL equation · LindbladVectorizedTensors.jl"/><meta property="twitter:title" content="GKSL equation · LindbladVectorizedTensors.jl"/><meta name="description" content="Documentation for LindbladVectorizedTensors.jl."/><meta property="og:description" content="Documentation for LindbladVectorizedTensors.jl."/><meta property="twitter:description" content="Documentation for LindbladVectorizedTensors.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">LindbladVectorizedTensors.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../site_types/">New site types</a></li><li><a class="tocitem" href="../operations/">Operations</a></li><li><span class="tocitem">Examples</span><ul><li class="is-active"><a class="tocitem" href>GKSL equation</a><ul class="internal"><li><a class="tocitem" href="#Unitary-time-evolution"><span>Unitary time evolution</span></a></li><li><a class="tocitem" href="#Adding-a-dissipation-term"><span>Adding a dissipation term</span></a></li></ul></li><li><a class="tocitem" href="../example_noisy_qc/">Noisy quantum computer</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>GKSL equation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>GKSL equation</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/phaerrax/LindbladVectorizedTensors.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/phaerrax/LindbladVectorizedTensors.jl/blob/main/docs/src/example_gksl.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="GKSL-equation"><a class="docs-heading-anchor" href="#GKSL-equation">GKSL equation</a><a id="GKSL-equation-1"></a><a class="docs-heading-anchor-permalink" href="#GKSL-equation" title="Permalink"></a></h1><p>With the states and operators defined by this package, we can define a Lindbladian operator acting on density matrices, in a typical GKSL equation. Let&#39;s take, as an example, a system of (N=4) harmonic oscillators described by the Hamiltonian</p><p class="math-container">\[H=
+\sum_{n=1}^{N} \omega_n\phantomadj a^\dagger_n a_n\phantomadj +
+\sum_{n=1}^{N-1} \lambda_n\phantomadj (a^\dagger_n a_{n+1}\phantomadj + a^\dagger_{n+1}
+a_n\phantomadj).\]</p><p>We set up the site indices and the coefficients (to some arbitrary values),</p><pre><code class="language-julia-repl hljs">julia&gt; N = 4; s = siteinds(&quot;vBoson&quot;, N; dim=5);
+
+julia&gt; ω = fill(1.0, N);
+
+julia&gt; λ = fill(0.25, N);
+</code></pre><p>and the initial state such that there&#39;s one particle in the first site and two in the second one:</p><pre><code class="language-julia-repl hljs">julia&gt; ρₜ = MPS(s, [&quot;1&quot;, &quot;2&quot;, &quot;0&quot;, &quot;0&quot;])
+4-element MPS:
+ ((dim=25|id=644|&quot;Site,n=1,vBoson&quot;), (dim=1|id=769|&quot;Link,l=1&quot;))
+ ((dim=1|id=769|&quot;Link,l=1&quot;), (dim=25|id=431|&quot;Site,n=2,vBoson&quot;), (dim=1|id=427|&quot;Link,l=2&quot;))
+ ((dim=1|id=427|&quot;Link,l=2&quot;), (dim=25|id=652|&quot;Site,n=3,vBoson&quot;), (dim=1|id=382|&quot;Link,l=3&quot;))
+ ((dim=1|id=382|&quot;Link,l=3&quot;), (dim=25|id=551|&quot;Site,n=4,vBoson&quot;))
+</code></pre><h2 id="Unitary-time-evolution"><a class="docs-heading-anchor" href="#Unitary-time-evolution">Unitary time evolution</a><a id="Unitary-time-evolution-1"></a><a class="docs-heading-anchor-permalink" href="#Unitary-time-evolution" title="Permalink"></a></h2><p>We will evolve the state using the tMPS algorithm, where we break up the evolution operator \(\exp(-\iu tH)\) into smaller factors using a quite rudimental Suzuki-Trotter approximation</p><p class="math-container">\[\exp(-\iu tH) \approx \exp(-\iu tH_{34}) \exp(-\iu tH_{23}) \exp(-\iu tH_{12})\]</p><p>where</p><p class="math-container">\[\begin{gather*}
+H_{12} \defeq
+\omega_1\phantomadj \adj{a_1} a_1\phantomadj +
+\lambda_1 (\adj{a_1} a_2\phantomadj + \adj{a_2} a_1\phantomadj) +
+\tfrac12 \omega_2\phantomadj \adj{a_2} a_2\phantomadj,\\
+H_{23} \defeq
+\tfrac12 \omega_2\phantomadj \adj{a_2} a_2\phantomadj +
+\lambda_2 (\adj{a_2} a_3\phantomadj + \adj{a_3} a_2\phantomadj) +
+\tfrac12 \omega_3\phantomadj \adj{a_3} a_3\phantomadj,\\
+H_{34} \defeq
+\tfrac12 \omega_3\phantomadj \adj{a_3} a_3\phantomadj +
+\lambda_3 (\adj{a_3} a_4\phantomadj + \adj{a_4} a_3\phantomadj) +
+\omega_4\phantomadj \adj{a_4} a_4\phantomadj.
+\end{gather*}\]</p><p>This decomposition implies a similar decomposition for the commutators, that is</p><p class="math-container">\[\exp(-\iu t [H, \blank]) \approx
+\exp(-\iu t [H_{34}, \blank])
+\exp(-\iu t [H_{23}, \blank])
+\exp(-\iu t [H_{12}, \blank])\]</p><p>so we can compose the time-evolution operator for our mixed state as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; L₁₂ = (
+           ω[1] * gkslcommutator_itensor(s, &quot;N&quot;, 1, &quot;Id&quot;, 2) +
+           λ[1] * (
+               gkslcommutator_itensor(s, &quot;Adag&quot;, 1, &quot;A&quot;, 2) +
+               gkslcommutator_itensor(s, &quot;A&quot;, 1, &quot;Adag&quot;, 2)
+           ) +
+           0.5ω[2] * gkslcommutator_itensor(s, &quot;Id&quot;, 1, &quot;N&quot;, 2)
+       );
+
+julia&gt; L₂₃ = (
+           0.5ω[2] * gkslcommutator_itensor(s, &quot;N&quot;, 2, &quot;Id&quot;, 3) +
+           λ[2] * (
+               gkslcommutator_itensor(s, &quot;Adag&quot;, 2, &quot;A&quot;, 3) +
+               gkslcommutator_itensor(s, &quot;A&quot;, 2, &quot;Adag&quot;, 3)
+           ) +
+           0.5ω[3] * gkslcommutator_itensor(s, &quot;Id&quot;, 2, &quot;N&quot;, 3)
+       );
+
+julia&gt; L₃₄ = (
+           0.5ω[3] * gkslcommutator_itensor(s, &quot;N&quot;, 3, &quot;Id&quot;, 4) +
+           λ[3] * (
+               gkslcommutator_itensor(s, &quot;Adag&quot;, 3, &quot;A&quot;, 4) +
+               gkslcommutator_itensor(s, &quot;A&quot;, 3, &quot;Adag&quot;, 4)
+           ) +
+           ω[4] * gkslcommutator_itensor(s, &quot;Id&quot;, 3, &quot;N&quot;, 4)
+       );
+
+julia&gt; L = [L₁₂, L₂₃, L₃₄];
+</code></pre><p>Now we evolve the state, and at each time step we record its trace and the expectation value (normalised by the trace) of the number operator on all sites. Let&#39;s define first some functions to compute the expectation values.</p><pre><code class="language-julia-repl hljs">julia&gt; function expect_vec(x::MPS, name::AbstractString)
+           ev = [dot(MPS(siteinds(x), j -&gt; j == n ? name : &quot;Id&quot;), x)
+                 for n in 1:length(x)]
+           ev ≈ real(ev) || @warn &quot;Expectation values are not real&quot;
+           return real(ev)
+       end;
+
+julia&gt; function trace(x::MPS)
+           t = dot(MPS(siteinds(x), &quot;Id&quot;), x)
+           t ≈ real(t) || @warn &quot;Trace is not real&quot;
+           return real(t)
+       end;
+</code></pre><p>We will store the results in the columns of a matrix: the i-th column will be \(\tr(N^{(i)} \rho\sb{t})\), while the last will be \(\tr\rho\sb{t}\). We use the decomposition</p><p class="math-container">\[\Phi_t \approx
+\exp(\tfrac{t}{2} L_{12})
+\exp(\tfrac{t}{2} L_{23})
+\exp(\tfrac{t}{2} L_{34})
+\exp(\tfrac{t}{2} L_{34})
+\exp(\tfrac{t}{2} L_{23})
+\exp(\tfrac{t}{2} L_{12})\]</p><p>to approximate the time-evolution operator \(\Phi\sb{t} = \exp(t(L<em>{12} + L</em>{23} + L_{34}))\) for a time increment \(t\).</p><pre><code class="language-julia-repl hljs">julia&gt; dt = 0.05; tmax=5;
+
+julia&gt; evol_seq = exp.(0.5dt .* L); append!(evol_seq, reverse(evol_seq));
+
+julia&gt; nsteps = floor(Int, tmax / dt);
+
+julia&gt; expvals = Matrix{Float64}(undef, nsteps+1, N+1);
+</code></pre><pre><code class="language-julia-repl hljs">julia&gt; tr_ρₜ = trace(ρₜ); expvals[1, :] = [expect_vec(ρₜ, &quot;N&quot;) ./ tr_ρₜ; tr_ρₜ];
+
+julia&gt; expvals[1, :] ≈ [1, 2, 0, 0, 1]
+true
+
+julia&gt; for step in 1:nsteps
+           ρₜ = apply(evol_seq, ρₜ)
+           tr_ρₜ = trace(ρₜ)
+           expvals[step+1, :] .= [expect_vec(ρₜ, &quot;N&quot;) ./ tr_ρₜ; tr_ρₜ]
+       end
+</code></pre><p>Let&#39;s visualise the results using the Plots library:</p><pre><code class="language-julia-repl hljs">julia&gt; using Plots
+
+julia&gt; plt = plot(; title=&quot;Unitary evolution&quot;, xlabel=&quot;t&quot;);
+
+julia&gt; for n in 1:N
+           plot!(plt, 0:dt:tmax, expvals[:, n], label=&quot;⟨N_$n⟩&quot;)
+       end;
+</code></pre><p><img src="../gksl_unitary_n.png" alt="Plot of the unitary evolution via the GKSL equation"/></p><div class="admonition is-info" id="Info-1d8d71715c8ab23"><header class="admonition-header">Info<a class="admonition-anchor" href="#Info-1d8d71715c8ab23" title="Permalink"></a></header><div class="admonition-body"><p>In these examples the trace of the state is always exactly one, as it is preserved by design by the time-evolution method. However it might be useful to monitor it in other situations where the time-evolution algorithm does not have this property.</p></div></div><h2 id="Adding-a-dissipation-term"><a class="docs-heading-anchor" href="#Adding-a-dissipation-term">Adding a dissipation term</a><a id="Adding-a-dissipation-term-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-dissipation-term" title="Permalink"></a></h2><p>Let&#39;s also add a thermalisation term on all sites:</p><p class="math-container">\[\dissipator^{(n)} =
+\rho \mapsto
+\gamma (\nu_n+1) (
+    a_n\phantomadj \rho \adj{a_n}
+    - \tfrac12 \adj{a_n} a_n\phantomadj \rho
+    - \tfrac12 \rho \adj{a_n} a_n\phantomadj
+) +
+\gamma \nu_n (
+    \adj{a_n} \rho a_n\phantomadj
+    - \tfrac12 a_n\phantomadj \adj{a_n} \rho
+    - \tfrac12 \rho a_n\phantomadj \adj{a_n}
+)\]</p><p>where \(\nu\sb{n} = 1/(\eu^{\omega\sb{n}/T} - 1)\) is the average boson number on site \(n\) at temperature \(T\).</p><pre><code class="language-julia-repl hljs">julia&gt; γ = 0.5; T = 2;
+
+julia&gt; avgn(ω, T) = 1 / expm1(ω/T);
+
+julia&gt; function D(n)
+            d1 = (avgn(ω[n], T) + 1) * (
+               op(&quot;A⋅ * ⋅Adag&quot;, s, n) -
+               0.5 * op(&quot;Adag⋅ * A⋅&quot;, s, n) -
+               0.5 * op(&quot;⋅A * ⋅Adag&quot;, s, n)
+           );
+           d2 = avgn(ω[n], T) * (
+               op(&quot;Adag⋅ * ⋅A&quot;, s, n) -
+               0.5 * op(&quot;A⋅ * Adag⋅&quot;, s, n) -
+               0.5 * op(&quot;⋅Adag * ⋅A&quot;, s, n)
+           );
+           return γ * (d1 + d2);
+       end;
+</code></pre><div class="admonition is-success" id="Tip-4eb8ad2a7d6a2ad9"><header class="admonition-header">Tip<a class="admonition-anchor" href="#Tip-4eb8ad2a7d6a2ad9" title="Permalink"></a></header><div class="admonition-body"><p>Notice how we had to write the right-multiplication operators: in order to have \(\rhoXY\), we need to right-multiply first by \(X\) and then by \(Y\), which in ITensor language means that the operator acting on \(\rho\) is <code>op(&quot;⋅Y * ⋅X&quot;, ...)</code> (which corresponds to <code>apply(op(&quot;⋅Y&quot;, ...), op(&quot;⋅X&quot;, ...))</code>) since composition is done in the usual order from right to left.</p></div></div><p>Now we reset the state to its initial value, and add the non-unitary terms to the time-evolution operator, spreading them equally among the factors.</p><pre><code class="language-julia-repl hljs">julia&gt; L₁₂ = (
+           ω[1] * gkslcommutator_itensor(s, &quot;N&quot;, 1, &quot;Id&quot;, 2) +
+           λ[1] * (
+               gkslcommutator_itensor(s, &quot;Adag&quot;, 1, &quot;A&quot;, 2) +
+               gkslcommutator_itensor(s, &quot;A&quot;, 1, &quot;Adag&quot;, 2)
+           ) +
+           0.5ω[2] * gkslcommutator_itensor(s, &quot;Id&quot;, 1, &quot;N&quot;, 2) +
+           D(1) * op(&quot;Id&quot;, s, 2) +
+           op(&quot;Id&quot;, s, 1) * 0.5D(2)
+       );
+
+julia&gt; L₂₃ = (
+           0.5ω[2] * gkslcommutator_itensor(s, &quot;N&quot;, 2, &quot;Id&quot;, 3) +
+           λ[2] * (
+               gkslcommutator_itensor(s, &quot;Adag&quot;, 2, &quot;A&quot;, 3) +
+               gkslcommutator_itensor(s, &quot;A&quot;, 2, &quot;Adag&quot;, 3)
+           ) +
+           0.5ω[3] * gkslcommutator_itensor(s, &quot;Id&quot;, 2, &quot;N&quot;, 3) +
+           0.5D(2) * op(&quot;Id&quot;, s, 3) +
+           op(&quot;Id&quot;, s, 2) * 0.5D(3)
+       );
+
+julia&gt; L₃₄ = (
+           0.5ω[3] * gkslcommutator_itensor(s, &quot;N&quot;, 3, &quot;Id&quot;, 4) +
+           λ[3] * (
+               gkslcommutator_itensor(s, &quot;Adag&quot;, 3, &quot;A&quot;, 4) +
+               gkslcommutator_itensor(s, &quot;A&quot;, 3, &quot;Adag&quot;, 4)
+           ) +
+           ω[4] * gkslcommutator_itensor(s, &quot;Id&quot;, 3, &quot;N&quot;, 4) +
+           0.5D(3) * op(&quot;Id&quot;, s, 4) +
+           op(&quot;Id&quot;, s, 3) * 0.5D(4)
+       );
+
+julia&gt; L = [L₁₂, L₂₃, L₃₄];
+
+julia&gt; evol_seq = exp.(0.5dt .* L); append!(evol_seq, reverse(evol_seq));
+
+julia&gt; ρₜ = MPS(s, [&quot;1&quot;, &quot;2&quot;, &quot;0&quot;, &quot;0&quot;])
+4-element MPS:
+ ((dim=25|id=278|&quot;Site,n=1,vBoson&quot;), (dim=1|id=894|&quot;Link,l=1&quot;))
+ ((dim=1|id=894|&quot;Link,l=1&quot;), (dim=25|id=287|&quot;Site,n=2,vBoson&quot;), (dim=1|id=537|&quot;Link,l=2&quot;))
+ ((dim=1|id=537|&quot;Link,l=2&quot;), (dim=25|id=148|&quot;Site,n=3,vBoson&quot;), (dim=1|id=352|&quot;Link,l=3&quot;))
+ ((dim=1|id=352|&quot;Link,l=3&quot;), (dim=25|id=613|&quot;Site,n=4,vBoson&quot;))
+</code></pre><p>Let&#39;s start the evolution:</p><pre><code class="language-julia-repl hljs">julia&gt; tr_ρₜ = trace(ρₜ); expvals[1, :] = [expect_vec(ρₜ, &quot;N&quot;) ./ tr_ρₜ; tr_ρₜ];
+
+julia&gt; for step in 1:nsteps
+           ρₜ = apply(evol_seq, ρₜ)
+           tr_ρₜ = trace(ρₜ)
+           expvals[step+1, :] .= [expect_vec(ρₜ, &quot;N&quot;) ./ tr_ρₜ; tr_ρₜ]
+       end
+</code></pre><p>Here&#39;s a plot of the results, obtained in the same way as the another one.</p><p><img src="../gksl_nonunitary_n.png" alt="Plot of the non-unitary evolution via the GKSL equation"/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../operations/">« Operations</a><a class="docs-footer-nextpage" href="../example_noisy_qc/">Noisy quantum computer »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 11 April 2026 16:54">Saturday 11 April 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
