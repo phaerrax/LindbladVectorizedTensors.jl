@@ -7,7 +7,7 @@ the Hamiltonian
 
 ```math
 H=
-\sum_{n=1}^{N} \omega_n\phantomadj a^\dagger_n a_n\phantomadj + 
+\sum_{n=1}^{N} \omega_n\phantomadj a^\dagger_n a_n\phantomadj +
 \sum_{n=1}^{N-1} \lambda_n\phantomadj (a^\dagger_n a_{n+1}\phantomadj + a^\dagger_{n+1}
 a_n\phantomadj).
 ```
@@ -41,7 +41,7 @@ julia> ρₜ = MPS(s, ["1", "2", "0", "0"])
 We will evolve the state using the tMPS algorithm, where we break up the
 evolution operator \\(\exp(-\iu tH)\\) into smaller factors using a quite
 rudimental Suzuki-Trotter approximation
- 
+
 ```math
 \exp(-\iu tH) \approx \exp(-\iu tH_{34}) \exp(-\iu tH_{23}) \exp(-\iu tH_{12})
 ```
@@ -51,7 +51,7 @@ where
 ```math
 \begin{gather*}
 H_{12} \defeq
-\omega_1\phantomadj \adj{a_1} a_1\phantomadj + 
+\omega_1\phantomadj \adj{a_1} a_1\phantomadj +
 \lambda_1 (\adj{a_1} a_2\phantomadj + \adj{a_2} a_1\phantomadj) +
 \tfrac12 \omega_2\phantomadj \adj{a_2} a_2\phantomadj,\\
 H_{23} \defeq
@@ -147,7 +147,7 @@ L_{23} + L_{34}))\\) for a time increment \\(t\\).
 
 ```jldoctest gkslexample
 julia> dt = 0.05; tmax=5;
- 
+
 julia> evol_seq = exp.(0.5dt .* L); append!(evol_seq, reverse(evol_seq));
 
 julia> nsteps = floor(Int, tmax / dt);

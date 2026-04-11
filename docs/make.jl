@@ -14,7 +14,7 @@ makedocs(;
         "Home" => "index.md",
         "New site types" => "site_types.md",
         "Operations" => "operations.md",
-        "Examples" => ["example_gksl.md"],
+        "Examples" => ["example_gksl.md", "example_noisy_qc.md"],
     ],
     format=Documenter.HTML(;
         mathengine=Documenter.MathJax3(
