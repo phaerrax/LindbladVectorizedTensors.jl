@@ -101,21 +101,36 @@ end
 const _implemented_vtypes = ["Boson", "Fermion", "S=1/2", "Electron", "FDot3", "Qubit"]
 
 """
-    vec_projector(x::MPS; existing_sites=nothing)
+    vec_projector(x::MPS; existing_sites=nothing, kwargs...)
 
 Return the MPS representing the vectorisation of `projector(x)`, i.e. of the density matrix
 ``|x⟩⟨x|``.  This method is available for the following site types:
 $(join(_implemented_vtypes, ", ", " and ")).  The vectorisation is performed using the
-Gell-Mann basis for all types except "Qubit", for which the Pauli transfer-matrix basis is
+Gell-Mann basis for all types except Qubit, for which the Pauli transfer-matrix basis is
 used instead. In any case, the basis is always the same one used in the definition of the
 vectorised states and operators.
 
-The returned MPS will have a new set of indices. Set `existing_sites` to `true` in order to
-"anchor" the result to an already existing set of indices.
+The returned MPS will have a brand new set of indices, of the corresponding vectorised site
+type (e.g. if `x` has Qubit indices then the result will have vQubit indices). Set
+`existing_sites` to an existing set of site indices in order to use them in the resulting
+MPS.
+
+Use additional keyword arguments to control the level of truncation, which are the same as
+those accepted by `contract(::MPO, ::MPO; kw...)`.
+
+# Keyword arguments
+
+* `existing_sites`: replace the indices of the output MPS to a desired existing set.
+* `normalize::Bool=true`: whether or not to normalise the input MPS before forming the
+  projector. If `normalize==false` and the input MPS is not already normalised, this
+  function will not output a proper projector, and simply outputs the vectorisation of
+  ``|x⟩⟨x|``, i.e. the projector scaled by `norm(x)^2`.
+* truncation keyword arguments accepted by `contract(::MPO, ::MPO; kw...)`.
+
 """
-function vec_projector(x::MPS; existing_sites=nothing)
+function vec_projector(x::MPS; existing_sites=nothing, projector_kwargs...)
     N = length(x)
-    projx = projector(x)  # Density matrix of the pure state `x`
+    projx = projector(x; projector_kwargs...)  # Density matrix of the pure state `x`
     s = siteinds(x)
 
     # `projx` is an MPO, so with `siteinds(projx)` we get both each "real" site index and

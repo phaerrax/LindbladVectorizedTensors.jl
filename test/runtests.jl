@@ -87,6 +87,18 @@ end
 end
 
 @testset "Vectorisation of operators" verbose=true begin
+    @testset "vec_projector keyword arguments" begin
+        N = 2
+        sites = siteinds("S=1/2", N)
+        x = random_mps(ComplexF64, sites; linkdims=4)
+        x_vec = vec_projector(x;)
+
+        sites_vec = siteinds("vS=1/2", N)
+        @test siteinds(vec_projector(x; existing_sites=sites_vec)) == sites_vec
+        @test maxlinkdim(vec_projector(x; maxdim=3)) == 3
+        @test maxlinkdim(vec_projector(x; cutoff=1e-4)) ≤ 4
+    end
+
     @testset "S=1/2" begin
         N = 4
         sites = siteinds("S=1/2", N)
