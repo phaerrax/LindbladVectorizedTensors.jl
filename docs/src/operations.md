@@ -57,12 +57,13 @@ julia> AdagempA = apply(op("Adag⋅ * ⋅A", s), emp);
 
 ```
 
-These, together with the identity `"Id"`, are the only “basic” operators defined
-on the vectorised types which can be called with the `op` function.
-
-!!! info "Defining new operators"
+!!! info "Allowed operators for vectorised types"
+    In other words, when we use the `op` function on a vectorised site type
+    `"vT"`, the only allowed operator names are `"Id"`, `"X⋅"` or `"⋅X"`, where
+    `"X"` is an already existing operator for the site type `"T"`.
     Due to technical limitations, it is not possible to define new operators by
-    overloading the `op` method for the vectorised site types in this package.
+    overloading the `op` method for the vectorised site types provided by this
+    package.
 
 ## Commutators
 
@@ -180,21 +181,25 @@ sum(
 
 ```
 
-## The adjoint map
+## Adjoint map
+
+!!! warning "Only available for the `vQubit` site tipe"
+    At the time of writing this, the `adjointmap_itensor` function is available
+    only for `vQubit` sites.
 
 Another common operation on mixed states is \\(\rho \mapsto X \rho \adj{X}\\),
 where \\(X\\) is some operator. For example, in the definition of the
 dissipation terms in the GKSL equation (see the [relative example](@ref "GKSL
-equation") we have \\(a\sb{n}\phantomadj \rho \adj{a\sb{n}}\\), which can be
+equation")) we have \\(a\sb{n}\phantomadj \rho \adj{a\sb{n}}\\), which can be
 simply written as `apply(op("A⋅ * ⋅Adag", s, n), ρ)`, where `s` is the list of
 Index object that `ρ` is defined on.
-This was straightforward because the `A` and `Adag` operators are already
+This is straightforward because the `A` and `Adag` operators are already
 defined, but not all operators have their adjoint available in the library.
 
-The `adjointmap_itensor` [^adjointname] function provides a convenient way of
-creating the tensor representing the above map for any operator that can be
-called on the non-vectorised site type.  The syntax is similar to the one of the
-`op` function: for example, we can write
+The `adjointmap_itensor`[^1] function provides a convenient way of creating the
+tensor representing the above map for any operator that already exists for the
+non-vectorised site type.  The syntax is similar to the one of the `op`
+function: for example, we can write
 
 ```jldoctest operations
 julia> s = siteinds("vQubit", 6);
@@ -203,23 +208,18 @@ julia> ρ = MPS(s, "0");
 
 julia> apply(adjointmap_itensor("CNOT", s[1], s[2]), ρ);
 
-julia> apply(adjointmap_itensor("Rx", s, 5; θ=1/2), ρ);
-
 julia> apply(adjointmap_itensor("Rx", s, 5; θ=pi/3), ρ);
 
 ```
 
-We did not need to define the adjoint of "Rx": the `adjointmap_itensor` already
-takes care of computing it internally, without defining a new operator.
+In these cases we did not need to define the adjoint of "CNOT" or "Rx": the
+`adjointmap_itensor` already takes care of computing it internally, without
+having to define a new operator.
 The function automatically computes the adjoint of the given operator and
 creates the tensor corresponding to the vectorisation of the \\(\rho \mapsto X
 \rho \adj{X}\\) map, that can then be applied to MPSs or other ITensors.
 
-!!! warning "Only available for the `vQubit` site tipe"
-    At the time of writing this, the `adjointmap_itensor` function is available
-    only for `vQubit` sites.
-
-[^adjointname]: The name of this function comes from the similarity of this map
-to the [adjoint representation]
-(https://en.wikipedia.org/wiki/Adjoint_representation) of a group (typically a
-Lie group).
+[^1]: The name of this function comes from the similarity of this map to the
+    [adjoint representation]
+    (https://en.wikipedia.org/wiki/Adjoint_representation) of a group (typically
+    a Lie group).
