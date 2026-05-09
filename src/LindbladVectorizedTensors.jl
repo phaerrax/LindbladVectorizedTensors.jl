@@ -13,7 +13,6 @@ export chain,
     gellmannmatrix,
     jwstring,
     sitenumber,
-    vec,
     vonneumannentropy
 
 include("utils.jl")

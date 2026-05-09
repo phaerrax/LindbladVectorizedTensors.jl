@@ -37,10 +37,10 @@ end
 # Shorthand notation
 function vstate(sn::StateName, ::SiteType"vBoson", d::Int)
     v = ITensors.state(sn, SiteType("Boson"))
-    return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(d))
+    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(d))
 end
 function vop(sn::StateName, ::SiteType"vBoson", d::Int)
-    return LindbladVectorizedTensors.vec(
+    return _hilbertschmidt_vec(
         try_op(OpName(statenamestring(sn)), SiteType("Boson"), d), gellmannbasis(d)
     )
 end
@@ -52,7 +52,7 @@ function ITensors.state(::StateName{N}, ::SiteType"vBoson", d::Int) where {N}
     n = parse(Int, String(N))
     v = zeros(d)
     v[n + 1] = 1.0
-    return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(d))
+    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(d))
 end
 
 function ITensors.state(
@@ -66,7 +66,7 @@ function ITensors.state(
         # we can call this one instead.
         ρ_eq = exp(-frequency / temperature * numop)
         ρ_eq /= tr(ρ_eq)
-        return LindbladVectorizedTensors.vec(ρ_eq, gellmannbasis(d))
+        return _hilbertschmidt_vec(ρ_eq, gellmannbasis(d))
     end
 end
 
@@ -84,7 +84,7 @@ function ITensors.state(
         ρ_eq = exp(-frequency / temperature * numop)
         ρ_eq /= tr(ρ_eq)
     end
-    return LindbladVectorizedTensors.vec(xop * ρ_eq, gellmannbasis(d))
+    return _hilbertschmidt_vec(xop * ρ_eq, gellmannbasis(d))
 end
 
 # States representing vectorised operators
@@ -99,10 +99,10 @@ ITensors.state(sn::StateName"Y", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
 # Operator dispatch
 # =================
 function premultiply(mat, ::SiteType"vBoson", d::Int)
-    return LindbladVectorizedTensors.vec(x -> mat * x, gellmannbasis(d))
+    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(d))
 end
 function postmultiply(mat, ::SiteType"vBoson", d::Int)
-    return LindbladVectorizedTensors.vec(x -> x * mat, gellmannbasis(d))
+    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(d))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the

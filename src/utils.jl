@@ -34,32 +34,6 @@ function jwstring(; start, stop, op::AbstractString="F")
     return collect(Iterators.flatten([(op, start + k) for k in 1:(stop - start - 1)]))
 end
 
-# Vectorisation utilities
-# =======================
-# In order to use tr(x'*y) as a tool to extract coefficient the basis must
-# of course be orthonormal wrt this inner product.
-# The canonical basis or the Gell-Mann one are okay.
-
-"""
-    vec(A::Matrix, basis::Vector)
-
-Compute the vector of coefficients of the matrix `A` wrt the basis `basis`.
-"""
-function vec(A::Matrix, basis::Vector)
-    return [tr(b' * A) for b in basis]
-end
-
-"""
-    vec(L::Function, basis::Vector)
-
-Compute the matrix of coefficients of the linear map `L` wrt the basis `basis`.
-The linearity of the map is not checked, so using this function with non-linear
-functions leads to undefined results.
-"""
-function vec(L::Function, basis::Vector)
-    return [tr(bi' * L(bj)) for (bi, bj) in Base.product(basis, basis)]
-end
-
 """
     partialtrace(sites::Vector{Index{Int64}}, v::MPS, j::Int)
 

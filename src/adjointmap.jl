@@ -13,7 +13,7 @@ function adjointmapmatrix(X::OpName; kwargs...)
     # This is some square matrix. We can deduce the dimension, hence the number of qbits
     # on which X acts, from it.
     n_qbits = Int(log2(size(op, 1)))
-    return LindbladVectorizedTensors.vec(a -> op * a * op', ptmbasis(n_qbits))
+    return _hilbertschmidt_vec(a -> op * a * op', ptmbasis(n_qbits))
 end
 
 """

@@ -16,7 +16,7 @@ function vstate(sn::StateName, ::SiteType"vElectron")
     return vec(kron(v, v'), gellmannbasis(4))
 end
 function vop(sn::StateName, ::SiteType"vElectron")
-    return LindbladVectorizedTensors.vec(
+    return _hilbertschmidt_vec(
         try_op(OpName(statenamestring(sn)), SiteType("Electron")), gellmannbasis(4)
     )
 end
@@ -70,10 +70,10 @@ end
 # Operators acting on vectorised spins
 # ------------------------------------
 function premultiply(mat, ::SiteType"vElectron")
-    return LindbladVectorizedTensors.vec(x -> mat * x, gellmannbasis(4))
+    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(4))
 end
 function postmultiply(mat, ::SiteType"vElectron")
-    return LindbladVectorizedTensors.vec(x -> x * mat, gellmannbasis(4))
+    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(4))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the

@@ -45,10 +45,10 @@ end
 # Shorthand notation:
 function vstate(sn::StateName, ::SiteType"vQubit")
     v = ITensors.state(sn, SiteType("Qubit"))
-    return LindbladVectorizedTensors.vec(kron(v, v'), ptmbasis(1))
+    return _hilbertschmidt_vec(kron(v, v'), ptmbasis(1))
 end
 function vop(sn::StateName, ::SiteType"vQubit")
-    return LindbladVectorizedTensors.vec(
+    return _hilbertschmidt_vec(
         try_op(OpName(statenamestring(sn)), SiteType("Qubit")), ptmbasis(1)
     )
 end
@@ -70,11 +70,11 @@ ITensors.state(sn::StateName"H", st::SiteType"vQubit") = vop(sn, st)
 # =================
 function premultiply(mat, ::SiteType"vQubit")
     d = Int(log2(size(mat, 1)))
-    return LindbladVectorizedTensors.vec(x -> mat * x, ptmbasis(d))
+    return _hilbertschmidt_vec(x -> mat * x, ptmbasis(d))
 end
 function postmultiply(mat, ::SiteType"vQubit")
     d = Int(log2(size(mat, 1)))
-    return LindbladVectorizedTensors.vec(x -> x * mat, ptmbasis(d))
+    return _hilbertschmidt_vec(x -> x * mat, ptmbasis(d))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the

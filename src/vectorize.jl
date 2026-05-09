@@ -1,5 +1,34 @@
 export vec_projector
 
+# In order to use tr(x'*y) as a tool to extract coefficient the basis must of course be
+# orthonormal wrt this inner product.  The canonical basis or the Gell-Mann one are okay.
+
+"""
+    _hilbertschmidt_vec(A::AbstractMatrix, basis)
+    _hilbertschmidt_vec(T::ITensor, basis)
+    _hilbertschmidt_vec(L::Function, basis)
+
+Compute the vector of coefficients of a matrix `A`, an ITensor `T` or a linear function `L` with respect to the matrix basis `basis`.
+
+`T` must be a 2-dimensional tensor, i.e. a tensor for which the `matrix` function works.
+
+The linearity of `L` is not checked, so using this function with non-linear functions leads
+to undefined behaviour.
+"""
+function _hilbertschmidt_vec end
+
+function _hilbertschmidt_vec(A::AbstractMatrix, basis)
+    return [tr(b' * A) for b in basis]
+end
+
+function _hilbertschmidt_vec(t::ITensor, basis::Vector)
+    return [tr(b' * matrix(t)) for b in basis]
+end
+
+function _hilbertschmidt_vec(L::Function, basis::Vector)
+    return [tr(bi' * L(bj)) for (bi, bj) in Base.product(basis, basis)]
+end
+
 function _change_of_basis_to_gellmann(new_s::Index, old_s::Index)
     @assert ITensors.dim(new_s) == ITensors.dim(old_s)
     d = isqrt(ITensors.dim(new_s))

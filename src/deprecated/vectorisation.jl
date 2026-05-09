@@ -1,9 +1,11 @@
-export vec_purestate_densitymatrix
+export vec, vec_purestate_densitymatrix
+
+Base.@deprecate vec(m, basis) LindbladVectorizedTensors._hilbertschmidt_vec(m, basis) false
 
 function vec_purestate_densitymatrix(::SiteType"Qubit", x::MPS; existing_sites=nothing)
     Base.depwarn(
-        "vec_purestate_densitymatrix(SiteType(\"Qubit\"), x) is deprecated, use \
-        vec_projector(x) instead.",
+        "vec_purestate_densitymatrix(SiteType(\"Qubit\"), x) is deprecated, use " *
+        "vec_projector(x) instead.",
         :vec_purestate_densitymatrix;
         force=true,
     )

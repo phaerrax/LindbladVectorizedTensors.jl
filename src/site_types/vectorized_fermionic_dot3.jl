@@ -22,10 +22,10 @@ end
 # Shorthand notation:
 function vstate(sn::AbstractString, ::SiteType"vFDot3")
     v = ITensors.state(StateName(sn), SiteType("FDot3"))
-    return LindbladVectorizedTensors.vec(kron(v, v'), gellmannbasis(2^3))
+    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(2^3))
 end
 function vop(on::AbstractString, ::SiteType"vFDot3")
-    return LindbladVectorizedTensors.vec(
+    return _hilbertschmidt_vec(
         try_op(OpName(statenamestring(sn)), SiteType("FDot3")), gellmannbasis(2^3)
     )
 end
@@ -61,10 +61,10 @@ ITensors.state(sn::StateName"ntot", st::SiteType"vFDot3") = vop(sn, st)
 # Operator dispatch
 # =================
 function premultiply(mat, ::SiteType"vFDot3")
-    return LindbladVectorizedTensors.vec(x -> mat * x, gellmannbasis(2^3))
+    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(2^3))
 end
 function postmultiply(mat, ::SiteType"vFDot3")
-    return LindbladVectorizedTensors.vec(x -> x * mat, gellmannbasis(2^3))
+    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(2^3))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
