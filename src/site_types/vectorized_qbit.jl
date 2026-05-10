@@ -48,9 +48,7 @@ function vstate(sn::StateName, ::SiteType"vQubit")
     return _hilbertschmidt_vec(kron(v, v'), ptmbasis(1))
 end
 function vop(sn::StateName, ::SiteType"vQubit")
-    return _hilbertschmidt_vec(
-        try_op(OpName(statenamestring(sn)), SiteType("Qubit")), ptmbasis(1)
-    )
+    return _hilbertschmidt_vec(op(statenamestring(sn), siteind("Qubit")), ptmbasis(1))
 end
 
 # States (actual ones)
@@ -68,12 +66,19 @@ ITensors.state(sn::StateName"H", st::SiteType"vQubit") = vop(sn, st)
 
 # Operator dispatch
 # =================
-function premultiply(mat, ::SiteType"vQubit")
-    d = Int(log2(size(mat, 1)))
+function premultiply(t, ::SiteType"vQubit")
+    site_inds = inds(t; plev=0)
+    d = length(site_inds)
+    C = combiner(site_inds)
+    mat = matrix(C * t * C')
     return _hilbertschmidt_vec(x -> mat * x, ptmbasis(d))
 end
-function postmultiply(mat, ::SiteType"vQubit")
-    d = Int(log2(size(mat, 1)))
+
+function postmultiply(t, ::SiteType"vQubit")
+    site_inds = inds(t; plev=0)
+    d = length(site_inds)
+    C = combiner(site_inds)
+    mat = matrix(C * t * C')
     return _hilbertschmidt_vec(x -> x * mat, ptmbasis(d))
 end
 
@@ -84,7 +89,11 @@ end
 # if no "⋅" is found, otherwise an infinite loop would be entered.
 # We make an exception, though, for "Id" since it is an essential operator, and something
 # would probably break if it weren't defined.
-function ITensors.op(on::OpName, st::SiteType"vQubit"; kwargs...)
+function ITensors.op(
+    on::OpName, st::SiteType"vQubit", s1::Index, s_tail::Index...; kwargs...
+)
+    rs = reverse((s1, s_tail...))
+
     name = strip(String(ITensors.name(on))) # Remove extra whitespace
     if name == "Id"
         return nothing
@@ -109,20 +118,17 @@ function ITensors.op(on::OpName, st::SiteType"vQubit"; kwargs...)
         end
         # name == "⋅A" -> on1 is an empty string
         # name == "A⋅" -> on2 is an empty string
-        if on1 == ""
-            mat = LindbladVectorizedTensors.try_op(
-                OpName(on2), SiteType("Qubit"); kwargs...
-            )
-            return postmultiply(mat, st)
+        pmult_mat = if on1 == ""
+            t = op(on2, siteinds("Qubit", length(rs)); kwargs...)
+            postmultiply(t, st)
         elseif on2 == ""
-            mat = LindbladVectorizedTensors.try_op(
-                OpName(on1), SiteType("Qubit"); kwargs...
-            )
-            return premultiply(mat, st)
+            t = op(on1, siteinds("Qubit", length(rs)); kwargs...)
+            premultiply(t, st)
         else
             # This should logically never happen but, just in case, we throw an error.
             error("Unknown error with operator name $name")
         end
+        return itensor(pmult_mat, prime.(rs)..., dag.(rs)...)
     else
         error("Operator name $name is not \"Id\" or of the form \"A⋅\" or \"⋅A\"")
     end

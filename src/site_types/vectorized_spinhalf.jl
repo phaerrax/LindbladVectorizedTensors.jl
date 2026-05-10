@@ -96,10 +96,10 @@ function ITensors.op(on::OpName, st::SiteType"vS=1/2"; kwargs...)
         # name == "⋅A" -> on1 is an empty string
         # name == "A⋅" -> on2 is an empty string
         if on1 == ""
-            mat = try_op(OpName(on2), SiteType("S=1/2"); kwargs...)
+            mat = matrix(op(on2, siteind("S=1/2"); kwargs...))
             return postmultiply(mat, st)
         elseif on2 == ""
-            mat = try_op(OpName(on1), SiteType("S=1/2"); kwargs...)
+            mat = matrix(op(on1, siteind("S=1/2"); kwargs...))
             return premultiply(mat, st)
         else
             # This should logically never happen but, just in case, we throw an error.

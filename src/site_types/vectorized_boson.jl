@@ -49,7 +49,7 @@ function vstate(sn::StateName, ::SiteType"vBoson", d::Int)
 end
 function vop(sn::StateName, ::SiteType"vBoson", d::Int)
     return _hilbertschmidt_vec(
-        try_op(OpName(statenamestring(sn)), SiteType("Boson"), d), gellmannbasis(d)
+        op(statenamestring(sn), siteind("Boson"; dim=d)), gellmannbasis(d)
     )
 end
 
@@ -145,10 +145,11 @@ function ITensors.op(on::OpName, st::SiteType"vBoson", d::Int; kwargs...)
         # name == "⋅A" -> on1 is an empty string
         # name == "A⋅" -> on2 is an empty string
         if on1 == ""
-            mat = try_op(OpName(on2), SiteType("Boson"), d; kwargs...)
+            mat = matrix(op(on2, siteind("Boson"; dim=d); kwargs...))
+            # TODO can we generalise this to multiple indices?
             return postmultiply(mat, st, d)
         elseif on2 == ""
-            mat = try_op(OpName(on1), SiteType("Boson"), d; kwargs...)
+            mat = matrix(op(on1, siteind("Boson"; dim=d); kwargs...))
             return premultiply(mat, st, d)
         else
             # This should logically never happen but, just in case, we throw an error.

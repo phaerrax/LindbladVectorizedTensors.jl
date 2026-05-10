@@ -17,7 +17,7 @@ function vstate(sn::StateName, ::SiteType"vElectron")
 end
 function vop(sn::StateName, ::SiteType"vElectron")
     return _hilbertschmidt_vec(
-        try_op(OpName(statenamestring(sn)), SiteType("Electron")), gellmannbasis(4)
+        op(statenamestring(sn), siteind("Electron")), gellmannbasis(4)
     )
 end
 
@@ -108,10 +108,10 @@ function ITensors.op(on::OpName, st::SiteType"vElectron"; kwargs...)
         # name == "⋅A" -> on1 is an empty string
         # name == "A⋅" -> on2 is an empty string
         if on1 == ""
-            mat = try_op(OpName(on2), SiteType("Electron"); kwargs...)
+            mat = matrix(op(on2, siteind("Electron"); kwargs...))
             return postmultiply(mat, st)
         elseif on2 == ""
-            mat = try_op(OpName(on1), SiteType("Electron"); kwargs...)
+            mat = matrix(op(on1, siteind("Electron"); kwargs...))
             return premultiply(mat, st)
         else
             # This should logically never happen but, just in case, we throw an error.
