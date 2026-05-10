@@ -1,5 +1,22 @@
 export vec_projector
 
+const VecSiteType = Union{
+    SiteType"vBoson",
+    SiteType"vElectron",
+    SiteType"vFDot3",
+    SiteType"vFermion",
+    SiteType"vQubit",
+    SiteType"vS=1/2",
+}
+
+const _implemented_vtypes = ["Boson", "Electron", "FDot3", "Fermion", "Qubit", "S=1/2"]
+
+function nonvec_stype_name(x::VecSiteType)
+    # Remove the first character (the 'v') from the site type name, and return the name.
+    s = sitetypestring(x)
+    return s[nextind(s, 1):end]
+end
+
 # In order to use tr(x'*y) as a tool to extract coefficient the basis must of course be
 # orthonormal wrt this inner product.  The canonical basis or the Gell-Mann one are okay.
 
@@ -8,7 +25,8 @@ export vec_projector
     _hilbertschmidt_vec(T::ITensor, basis)
     _hilbertschmidt_vec(L::Function, basis)
 
-Compute the vector of coefficients of a matrix `A`, an ITensor `T` or a linear function `L` with respect to the matrix basis `basis`.
+Compute the vector of coefficients of a matrix `A`, an ITensor `T` or a linear function `L`
+with respect to the matrix basis `basis`.
 
 `T` must be a 2-dimensional tensor, i.e. a tensor for which the `matrix` function works.
 
@@ -127,8 +145,6 @@ function _change_of_basis_matrix(::SiteType"Qubit", new_s::Index, old_s::Index)
     _change_of_basis_to_ptm(new_s, old_s)
 end
 
-const _implemented_vtypes = ["Boson", "Fermion", "S=1/2", "Electron", "FDot3", "Qubit"]
-
 """
     vec_projector(x::MPS; existing_sites=nothing, kwargs...)
 
@@ -241,4 +257,115 @@ function vec_projector(x::MPS; existing_sites=nothing, projector_kwargs...)
     end
 
     return x_vec
+end
+
+function premultiply(t::ITensor, ::VecSiteType)
+    site_inds = inds(t; plev=0)
+    nsites = length(site_inds)
+
+    @assert allequal(dim, site_inds)
+    # TODO Lift this restriction and generalise the function to multi-site operators with
+    # different site-type dimensions.
+    d = dim(first(site_inds))
+
+    C = combiner(site_inds)
+    mat = matrix(C * t * C')
+    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(d, nsites))
+end
+
+function postmultiply(t::ITensor, ::VecSiteType)
+    site_inds = inds(t; plev=0)
+    nsites = length(site_inds)
+
+    @assert allequal(dim, site_inds)
+    d = dim(first(site_inds))
+
+    C = combiner(site_inds)
+    mat = matrix(C * t * C')
+    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(d, nsites))
+end
+
+# Specialised versions for the "vQubit" site type, for which we use the PTM basis.
+# Since SiteType"vQubit" <: VecSiteType, these versions override the previous ones when
+# called with SiteType("vQubit") as second argument.
+function premultiply(t::ITensor, ::SiteType"vQubit")
+    site_inds = inds(t; plev=0)
+    d = length(site_inds)
+    C = combiner(site_inds)
+    mat = matrix(C * t * C')
+    return _hilbertschmidt_vec(x -> mat * x, ptmbasis(d))
+end
+
+function postmultiply(t::ITensor, ::SiteType"vQubit")
+    site_inds = inds(t; plev=0)
+    d = length(site_inds)
+    C = combiner(site_inds)
+    mat = matrix(C * t * C')
+    return _hilbertschmidt_vec(x -> x * mat, ptmbasis(d))
+end
+
+# The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
+# OpName "A" is defined for the S=1/2 site type.
+# This is handy, but unless we find a better way to define this function this means that
+# _every_ operator has to be written this way; we cannot just return op(on, st) at the end
+# if no "⋅" is found, otherwise an infinite loop would be entered.
+# We make an exception for "Id", since `op("Id", s...)` already exists for any site type and
+# number of indices.
+function ITensors.op(
+    on::OpName, vec_st::VecSiteType, s1::Index, s_tail::Index...; kwargs...
+)
+    name = strip(String(ITensors.name(on)))  # Remove extra whitespace
+    if name == "Id"
+        return nothing
+    end
+
+    rs = reverse((s1, s_tail...))
+
+    dotloc = findfirst("⋅", name)
+    # This returns the position of the cdot in the operator name string, or `nothing` if no
+    # cdot is found.
+    if !isnothing(dotloc)
+        on1, on2 = nothing, nothing
+        on1 = name[1:prevind(name, dotloc.start)]
+        on2 = name[nextind(name, dotloc.start):end]
+        # If the OpName `on` is written correctly, i.e. it is either "A⋅" or "⋅A" for some
+        # A, then either `on1` or `on2` has to be empty (not both, not neither of them).
+        if (on1 == "" && on2 == "") || (on1 != "" && on2 != "")
+            throw(
+                ArgumentError(
+                    "Invalid operator name: \"$name\". Operator name is not \"Id\" or of the " *
+                    "form \"A⋅\" or \"⋅A\"",
+                ),
+            )
+        end
+
+        # Create a temporary array of site indices of the non-vectorised site type, so that
+        # we can get the "A" operator defined for them.
+        # If the non-vectorised type is "Boson", we also need to supply the dimension of the
+        # index (and since the other site types do not allow the `dim` keyword argument, we
+        # must separate the two cases).
+        nonvec_siteinds = if nonvec_stype_name(vec_st) == "Boson"
+            siteinds(nonvec_stype_name(vec_st), length(rs); dim=isqrt(dim(first(rs))))
+        else
+            siteinds(nonvec_stype_name(vec_st), length(rs))
+        end
+
+        # name == "⋅A" -> on1 is an empty string
+        # name == "A⋅" -> on2 is an empty string
+        pmult_mat = if on1 == ""
+            t = op(on2, nonvec_siteinds; kwargs...)
+            postmultiply(t, vec_st)
+        elseif on2 == ""
+            t = op(on1, nonvec_siteinds; kwargs...)
+            premultiply(t, vec_st)
+        else
+            # This should logically never happen but, just in case, we throw an error.
+            error("Unknown error with operator name \"$name\"")
+        end
+
+        return itensor(pmult_mat, prime.(rs)..., dag.(rs)...)
+        # This is how ITensor orders indices in its functions.
+    else
+        error("Operator name \"$name\" is not \"Id\" or of the form \"A⋅\" or \"⋅A\"")
+    end
 end

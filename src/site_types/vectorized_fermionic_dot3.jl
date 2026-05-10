@@ -58,61 +58,6 @@ ITensors.state(sn::StateName"n2", st::SiteType"vFDot3") = vop(sn, st)
 ITensors.state(sn::StateName"n3", st::SiteType"vFDot3") = vop(sn, st)
 ITensors.state(sn::StateName"ntot", st::SiteType"vFDot3") = vop(sn, st)
 
-# Operator dispatch
-# =================
-function premultiply(mat, ::SiteType"vFDot3")
-    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(2^3))
-end
-function postmultiply(mat, ::SiteType"vFDot3")
-    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(2^3))
-end
-
-# The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
-# OpName "A" is defined for the FDot3 site type.
-# This is handy, but unless we find a better way to define this function this means that
-# _every_ operator has to be written this way; we cannot just return op(on, st) at the end
-# if no "⋅" is found, otherwise an infinite loop would be entered.
-# We make an exception, though, for "Id" since it is an essential operator, and something
-# would probably break if it weren't defined.
-function ITensors.op(on::OpName, st::SiteType"vFDot3"; kwargs...)
-    name = strip(String(ITensors.name(on))) # Remove extra whitespace
-    if name == "Id"
-        return nothing
-    end
-    dotloc = findfirst("⋅", name)
-    # This returns the position of the cdot in the operator name String.
-    # It is `nothing` if no cdot is found.
-    if !isnothing(dotloc)
-        on1, on2 = nothing, nothing
-        on1 = name[1:prevind(name, dotloc.start)]
-        on2 = name[nextind(name, dotloc.start):end]
-        # If the OpName `on` is written correctly, i.e. it is either "A⋅" or "⋅A" for some
-        # A, then either `on1` or `on2` has to be empty (not both, not neither of them).
-        if (on1 == "" && on2 == "") || (on1 != "" && on2 != "")
-            throw(
-                ArgumentError(
-                    "Invalid operator name: $name. Operator name is not \"Id\" or of the " *
-                    "form \"A⋅\" or \"⋅A\"",
-                ),
-            )
-        end
-        # name == "⋅A" -> on1 is an empty string
-        # name == "A⋅" -> on2 is an empty string
-        if on1 == ""
-            mat = matrix(op(on2, siteind("FDot3"); kwargs...))
-            return postmultiply(mat, st)
-        elseif on2 == ""
-            mat = matrix(op(on1, siteind("FDot3"); kwargs...))
-            return premultiply(mat, st)
-        else
-            # This should logically never happen but, just in case, we throw an error.
-            error("Unknown error with operator name $name")
-        end
-    else
-        error("Operator name $name is not \"Id\" or of the form \"A⋅\" or \"⋅A\"")
-    end
-end
-
 function dot_hamiltonian(::SiteType"vFDot3", energies, coulomb_repulsion, sitenumber::Int)
     E = OpSum()
     for k in 1:3

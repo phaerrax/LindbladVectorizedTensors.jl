@@ -120,6 +120,19 @@ end
         @test expect(x, "N") ≈ expect_vec(x_vec, "N")
         @test expect(x, "X") ≈ expect_vec(x_vec, "X")
         @test expect(x, "A") ≈ expect_vec(x_vec, "A")
+
+        adagb_exp = [
+            dot(x, apply(op("a†b", sites, i, i + 1), x)) for
+            i in 1:length(x) if i + 1 <= length(x)
+        ]
+        adagb_exp_vec = [
+            trace(apply(op("ab†⋅", sites_vec, i, i + 1), x_vec)) for
+            i in 1:length(x_vec) if i + 1 <= length(x_vec)
+        ]
+        # In `adagb_exp_vec` we must use the adjoint of the operator in `adagb_exp` for the
+        # test to pass. This is the same issue we encounter in the "Left- and
+        # right-multiplication operators" test set above.
+        @test adagb_exp ≈ adagb_exp_vec
     end
 
     @testset "Qubit" begin

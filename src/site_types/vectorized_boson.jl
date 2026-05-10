@@ -24,27 +24,9 @@ ITensors.op(on::OpName"F", st::SiteType"vBoson", ds::Int...) = op(OpName"Id"(), 
 # the dimension of the space, so we need to compute ITensors.dim(s), i.e. the dimensions of
 # the Indices of the state or operator, and append them to the function arguments.
 
-function ITensors.state(sn::StateName, st::SiteType"vBoson", s::Index; kwargs...)
-    d = isqrt(ITensors.dim(s))
-    stvec = ITensors.state(sn, st, d; kwargs...)
-    return ITensors.itensor(stvec, s)
-end
-
-function ITensors.op(
-    on::OpName, st::SiteType"vBoson", s1::Index, s_tail::Index...; kwargs...
-)
-    rs = reverse((s1, s_tail...))
-    dims = isqrt.(ITensors.dim.(rs))
-    # Use `isqrt` which takes an Int and returns an Int; the decimal part is
-    # truncated, but it's not a problem since by construction dim.(rs) are
-    # perfect squares, so the decimal part should be zero.
-    opmat = ITensors.op(on, st, dims...; kwargs...)
-    return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)
-end
-
 # Shorthand notation
 function vstate(sn::StateName, ::SiteType"vBoson", d::Int)
-    v = ITensors.state(sn, SiteType("Boson"))
+    v = state(statenamestring(sn), siteind("Boson"; dim=d))
     return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(d))
 end
 function vop(sn::StateName, ::SiteType"vBoson", d::Int)
@@ -55,6 +37,13 @@ end
 
 # States
 # ------
+
+function ITensors.state(sn::StateName, st::SiteType"vBoson", s::Index; kwargs...)
+    d = isqrt(ITensors.dim(s))
+    stvec = state(sn, st, d; kwargs...)
+    return itensor(stvec, s)
+end
+
 function ITensors.state(::StateName{N}, ::SiteType"vBoson", d::Int) where {N}
     # Eigenstates êₙ ⊗ êₙ of the number operator, wrt the Hermitian basis.
     n = parse(Int, String(N))
@@ -103,62 +92,6 @@ ITensors.state(sn::StateName"N", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
 ITensors.state(sn::StateName"Id", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
 ITensors.state(sn::StateName"X", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
 ITensors.state(sn::StateName"Y", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
-
-# Operator dispatch
-# =================
-function premultiply(mat, ::SiteType"vBoson", d::Int)
-    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(d))
-end
-function postmultiply(mat, ::SiteType"vBoson", d::Int)
-    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(d))
-end
-
-# The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
-# OpName "A" is defined for the Boson site type.
-# This is handy, but unless we find a better way to define this function this means that
-# _every_ operator has to be written this way; we cannot just return op(on, st) at the end
-# if no "⋅" is found, otherwise an infinite loop would be entered.
-# We make an exception, though, for "Id" since it is an essential operator, and something
-# would probably break if it weren't defined.
-function ITensors.op(on::OpName, st::SiteType"vBoson", d::Int; kwargs...)
-    name = strip(String(ITensors.name(on))) # Remove extra whitespace
-    if name == "Id"
-        return nothing
-    end
-    dotloc = findfirst("⋅", name)
-    # This returns the position of the cdot in the operator name String.
-    # It is `nothing` if no cdot is found.
-    if !isnothing(dotloc)
-        on1, on2 = nothing, nothing
-        on1 = name[1:prevind(name, dotloc.start)]
-        on2 = name[nextind(name, dotloc.start):end]
-        # If the OpName `on` is written correctly, i.e. it is either "A⋅" or "⋅A" for some
-        # A, then either `on1` or `on2` has to be empty (not both, not neither of them).
-        if (on1 == "" && on2 == "") || (on1 != "" && on2 != "")
-            throw(
-                ArgumentError(
-                    "Invalid operator name: $name. Operator name is not \"Id\" or of the " *
-                    "form \"A⋅\" or \"⋅A\"",
-                ),
-            )
-        end
-        # name == "⋅A" -> on1 is an empty string
-        # name == "A⋅" -> on2 is an empty string
-        if on1 == ""
-            mat = matrix(op(on2, siteind("Boson"; dim=d); kwargs...))
-            # TODO can we generalise this to multiple indices?
-            return postmultiply(mat, st, d)
-        elseif on2 == ""
-            mat = matrix(op(on1, siteind("Boson"; dim=d); kwargs...))
-            return premultiply(mat, st, d)
-        else
-            # This should logically never happen but, just in case, we throw an error.
-            error("Unknown error with operator name $name")
-        end
-    else
-        error("Operator name $name is not \"Id\" or of the form \"A⋅\" or \"⋅A\"")
-    end
-end
 
 # GKSL equation terms
 # -------------------
