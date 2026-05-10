@@ -123,7 +123,7 @@ end
 function ITensors.op(on::OpName, st::SiteType"vBoson", d::Int; kwargs...)
     name = strip(String(ITensors.name(on))) # Remove extra whitespace
     if name == "Id"
-        return Matrix(1.0I, d^2, d^2)
+        return nothing
     end
     dotloc = findfirst("⋅", name)
     # This returns the position of the cdot in the operator name String.
