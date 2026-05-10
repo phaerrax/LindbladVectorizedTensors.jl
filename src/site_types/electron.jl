@@ -1,8 +1,4 @@
 # Additional ITensor states and operators for the electron SiteType.
-function ITensors.op(::OpName"Id", ::SiteType"Electron") # ITensors doesn't define this
-    return Matrix(1.0I, 4, 4)
-end
-
 ITensors.op(::OpName"Ntot^2", st::SiteType"Electron") = ITensors.op(OpName("Ntot"), st)^2
 ITensors.op(::OpName"ntot^2", st::SiteType"Electron") = ITensors.op(OpName("Ntot^2"), st)
 

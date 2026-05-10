@@ -12,6 +12,14 @@ function ITensors.space(::SiteType"vBoson"; dim=2)
     return dim^2
 end
 
+# One-body operators
+function ITensors.op(::OpName"Id", ::SiteType"vBoson", ds::Int...)
+    d = prod(ds)
+    return Matrix(1.0I, d^2, d^2)
+end
+ITensors.op(on::OpName"I", st::SiteType"vBoson", ds::Int...) = op(alias(on), st, ds...)
+ITensors.op(on::OpName"F", st::SiteType"vBoson", ds::Int...) = op(OpName"Id"(), st, ds...)
+
 # Just as with the "Boson" site type, "vBoson" operator and states require that we specify
 # the dimension of the space, so we need to compute ITensors.dim(s), i.e. the dimensions of
 # the Indices of the state or operator, and append them to the function arguments.

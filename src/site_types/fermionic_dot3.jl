@@ -61,10 +61,6 @@ ITensors.state(::StateName"13", ::SiteType"FDot3") = kron(occ, emp, occ)
 ITensors.state(::StateName"23", ::SiteType"FDot3") = kron(occ, occ, emp)
 ITensors.state(::StateName"123", ::SiteType"FDot3") = kron(occ, occ, occ)
 
-function ITensors.op(::OpName"Id", ::SiteType"FDot3")
-    return Matrix(1.0I, 2^3, 2^3)
-end
-
 function ITensors.op(::OpName"c1", ::SiteType"FDot3")
     return kron(id, id, dn)
 end
