@@ -96,7 +96,7 @@ end
 function _change_of_basis_to_ptm(new_s::Index, old_s::Index)
     # Like _change_of_basis_matrix_canonical, but with the PTM basis instead.
     d = 2
-    eb = canonicalbasis(d)
+    eb = canonicalbasis(d; columnmajor=false)
     gb = ptmbasis(1)
 
     u = ITensor(ComplexF64, new_s, old_s)

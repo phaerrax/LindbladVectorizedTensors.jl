@@ -30,7 +30,7 @@ end
     x = random_mps(sites; linkdims=4)
     # Note that we need to generate _real_ MPSs, since the states are Hermitian matrices
     # hence linear combinations of Gell-Mann matrices with real coefficients.
-    # The tests fail if the MPS is complex.
+    # The tests might fail if the MPS is complex (but why though? TODO find out!).
 
     @test expect_trace(x, "Sx") ≈ expect_vec(x, "Sx")
     @test expect_trace(x, "Sy") ≈ expect_vec(x, "Sy")
@@ -91,7 +91,6 @@ end
         N = 2
         sites = siteinds("S=1/2", N)
         x = random_mps(ComplexF64, sites; linkdims=4)
-        x_vec = vec_projector(x;)
 
         sites_vec = siteinds("vS=1/2", N)
         @test siteinds(vec_projector(x; existing_sites=sites_vec)) == sites_vec
@@ -125,7 +124,7 @@ end
 
     @testset "Qubit" begin
         sites = siteinds("Qubit", 4)
-        x = random_mps(sites; linkdims=4)
+        x = random_mps(ComplexF64, sites; linkdims=4)
         x_vec = vec_projector(x)
         sites_vec = siteinds(x_vec)
 
@@ -154,7 +153,7 @@ end
             i in 1:length(x_vec) if i + 2 <= length(x_vec)
         ]
 
-        @test h_exp ≈ h_exp_vec
+        @test y_exp ≈ y_exp_vec
         @test h_exp ≈ h_exp_vec
         @test cp_exp ≈ cp_exp_vec
         @test ccx_exp ≈ ccx_exp_vec
