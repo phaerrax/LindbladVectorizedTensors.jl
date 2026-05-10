@@ -1,6 +1,40 @@
 # Additional Qubit gates
 # ----------------------
 
+# How to combine indices of multi-site operators:
+#
+#   julia> proj0 = op(OpName("Proj0"), st);
+#
+#   julia> proj1 = op(OpName("Proj1"), st);
+#
+#   julia> id = matrix(op("Id", siteind(st)));
+#
+#   julia> r = matrix(op("Ry", s, 3; θ=pi/4))
+#   2×2 Matrix{Float64}:
+#    0.92388   -0.382683
+#    0.382683   0.92388
+#
+#   julia> C = combiner(inds(cp; plev=0))
+#   ITensor ord=3 (dim=4|id=48|"CMB,Link") (dim=2|id=531|"Qubit,Site,n=3")
+#       (dim=2|id=895|"Qubit,Site,n=2")
+#   NDTensors.Combiner
+#
+#   julia> matrix(C' * cr * C)
+#   4×4 Matrix{Float64}:
+#    1.0  0.0  0.0        0.0
+#    0.0  1.0  0.0        0.0
+#    0.0  0.0  0.92388   -0.382683
+#    0.0  0.0  0.382683   0.92388
+#
+#   julia> kron(proj0, id) + kron(proj1, r)
+#   4×4 Matrix{Float64}:
+#    1.0  0.0  0.0        0.0
+#    0.0  1.0  0.0        0.0
+#    0.0  0.0  0.92388   -0.382683
+#    0.0  0.0  0.382683   0.92388
+#
+# but matrix(C * cr * C') != kron(proj0, id) + kron(proj1, r)
+
 function ITensors.op(::OpName"CH", st::SiteType"Qubit")
     proj0 = op(OpName("Proj0"), st)
     proj1 = op(OpName("Proj1"), st)
@@ -9,29 +43,7 @@ function ITensors.op(::OpName"CH", st::SiteType"Qubit")
     return kron(proj0, id) + kron(proj1, h)
 end
 
-function ITensors.op(::OpName"CPhase", st::SiteType"Qubit"; ϕ::Real)
-    proj0 = op(OpName("Proj0"), st)
-    proj1 = op(OpName("Proj1"), st)
-    id = matrix(op("Id", siteind(st)))
-    phase = op(OpName("Phase"), st; ϕ=ϕ)
-    return kron(proj0, id) + kron(proj1, phase)
-end
-
-function ITensors.op(::OpName"CU3", st::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)
-    u = op(OpName("U"), st; θ=θ, ϕ=ϕ, λ=λ)
-    proj0 = op(OpName("Proj0"), st)
-    proj1 = op(OpName("Proj1"), st)
-    id = matrix(op("Id", siteind(st)))
-    return kron(proj0, id) + kron(proj1, u)
-end
-
-function ITensors.op(::OpName"CU", st::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)
-    return op(OpName("CU3"), st; θ=θ, ϕ=ϕ, λ=λ)
-end
-
-function ITensors.op(::OpName"CU1", st::SiteType"Qubit"; λ::Real)
-    return op(OpName("CU3"), st; θ=0, ϕ=0, λ=λ)
-end
+ITensors.op(::OpName"CPhase", st::SiteType"Qubit"; kwargs...) = op("CPHASE", st; kwargs...)
 
 function ITensors.op(::OpName"CCCCNOT", st::SiteType"Qubit")
     proj0 = op(OpName("Proj0"), st)
