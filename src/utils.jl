@@ -103,15 +103,29 @@ function gellmannmatrix(j, k, dim)
 end
 
 """
-    gellmannbasis(dim)
+    gellmannbasis(d, nsites=1)
 
-Return a list containing the "Hermitian basis" of ``Mat(ℂᵈⁱᵐ)``, i.e. composed
-of the ``dim²`` generalised Gell-Mann matrices.
+Return a list containing a Hermitian basis of the tensor product of `nsites` copies of
+``Mat(ℂᵈ)``, composed of (tensor products of) ``d²`` generalised Gell-Mann matrices.
 """
-function gellmannbasis(dim)
-    return [gellmannmatrix(j, k, dim) for (j, k) in [Base.product(1:dim, 1:dim)...]]
-    # We need to splat the result from `product` so that the result is a list
-    # of matrices (a Vector) and not a Matrix.
+function gellmannbasis(dim, nsites=1)
+    # Same as ptmbasis, but with a different single-site basis.
+    # TODO Unify the functions in a single one that returns the multi-site basis starting
+    # from the single-site one?
+    single_site_basis = [
+        gellmannmatrix(j, k, dim) for (j, k) in [Base.product(1:dim, 1:dim)...]
+    ]
+
+    if nsites == 1
+        return single_site_basis  # and don't bother with the rest
+    else
+        bxn = Base.product(repeat([single_site_basis], nsites)...)
+        tensorproducts = [kron(s...) for s in bxn]
+        perm = reverse(ntuple(i -> i, Val{nsites}()))  # (nqbits, nqbits - 1, ..., 2, 1)
+        tensorproducts_transposed = permutedims(tensorproducts, perm)
+
+        return Base.vec(tensorproducts_transposed)
+    end
 end
 
 """
