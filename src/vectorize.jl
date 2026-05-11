@@ -290,18 +290,18 @@ end
 # called with SiteType("vQubit") as second argument.
 function premultiply(t::ITensor, ::SiteType"vQubit")
     site_inds = inds(t; plev=0)
-    d = length(site_inds)
+    nsites = length(site_inds)
     C = combiner(site_inds)
     mat = matrix(C * t * C')
-    return _hilbertschmidt_vec(x -> mat * x, ptmbasis(d))
+    return _hilbertschmidt_vec(x -> mat * x, ptmbasis(nsites))
 end
 
 function postmultiply(t::ITensor, ::SiteType"vQubit")
     site_inds = inds(t; plev=0)
-    d = length(site_inds)
+    nsites = length(site_inds)
     C = combiner(site_inds)
     mat = matrix(C * t * C')
-    return _hilbertschmidt_vec(x -> x * mat, ptmbasis(d))
+    return _hilbertschmidt_vec(x -> x * mat, ptmbasis(nsites))
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the

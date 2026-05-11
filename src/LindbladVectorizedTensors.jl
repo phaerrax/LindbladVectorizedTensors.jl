@@ -18,6 +18,9 @@ export chain,
 include("utils.jl")
 include("deprecated.jl")
 
+include("matrix_bases.jl")
+include("vectorize.jl")
+
 include("site_types/spinhalf.jl")
 include("site_types/vectorized_spinhalf.jl")
 
@@ -41,7 +44,5 @@ include("adjointmap.jl")
 
 include("spin_chain.jl")
 include("exchange_interaction.jl")
-
-include("vectorize.jl")
 
 end
