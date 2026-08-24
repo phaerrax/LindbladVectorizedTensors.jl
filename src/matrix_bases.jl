@@ -100,3 +100,25 @@ function gellmannbasis(dim, nsites=1)
         return Base.vec(tensorproducts_transposed)
     end
 end
+
+# All methods are defined with the `dim` keyword argument, for simplicity reasons, even if
+# only the Boson type actually uses it.
+vectorizationbasis(::SiteType, ::Int; dim) = nothing
+function vectorizationbasis(st::SiteType"Boson", nsites::Int; dim)
+    return gellmannbasis(ITensors.space(st; dim), nsites)
+end
+function vectorizationbasis(st::SiteType"Electron", nsites::Int; dim=ITensors.space(st))
+    return gellmannbasis(dim, nsites)
+end
+function vectorizationbasis(st::SiteType"FDot3", nsites::Int; dim=ITensors.space(st))
+    return gellmannbasis(dim, nsites)
+end
+function vectorizationbasis(st::SiteType"Fermion", nsites::Int; dim=ITensors.space(st))
+    return gellmannbasis(dim, nsites)
+end
+function vectorizationbasis(st::SiteType"Qubit", nsites::Int; dim=ITensors.space(st))
+    return ptmbasis(nsites)
+end
+function vectorizationbasis(st::SiteType"S=1/2", nsites::Int; dim=ITensors.space(st))
+    return gellmannbasis(dim, nsites)
+end

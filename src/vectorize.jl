@@ -11,11 +11,12 @@ const VecSiteType = Union{
 
 const _implemented_vtypes = ["Boson", "Electron", "FDot3", "Fermion", "Qubit", "S=1/2"]
 
-function nonvec_stype_name(x::VecSiteType)
+function nonvec_stype_name(vst::VecSiteType)
     # Remove the first character (the 'v') from the site type name, and return the name.
-    s = sitetypestring(x)
+    s = sitetypestring(vst)
     return s[nextind(s, 1):end]
 end
+nonvec_stype(vst::VecSiteType) = SiteType(nonvec_stype_name(vst))
 
 # In order to use tr(x'*y) as a tool to extract coefficient the basis must of course be
 # orthonormal wrt this inner product.  The canonical basis or the Gell-Mann one are okay.
@@ -127,22 +128,22 @@ end
 
 _change_of_basis_matrix(::SiteType, ::Index, ::Index) = nothing
 function _change_of_basis_matrix(::SiteType"Boson", new_s::Index, old_s::Index)
-    _change_of_basis_to_gellmann(new_s, old_s)
+    return _change_of_basis_to_gellmann(new_s, old_s)
 end
 function _change_of_basis_matrix(::SiteType"Fermion", new_s::Index, old_s::Index)
-    _change_of_basis_to_gellmann(new_s, old_s)
+    return _change_of_basis_to_gellmann(new_s, old_s)
 end
 function _change_of_basis_matrix(::SiteType"S=1/2", new_s::Index, old_s::Index)
-    _change_of_basis_to_gellmann(new_s, old_s)
+    return _change_of_basis_to_gellmann(new_s, old_s)
 end
 function _change_of_basis_matrix(::SiteType"Electron", new_s::Index, old_s::Index)
-    _change_of_basis_to_gellmann(new_s, old_s)
+    return _change_of_basis_to_gellmann(new_s, old_s)
 end
 function _change_of_basis_matrix(::SiteType"FDot3", new_s::Index, old_s::Index)
-    _change_of_basis_to_gellmann(new_s, old_s)
+    return _change_of_basis_to_gellmann(new_s, old_s)
 end
 function _change_of_basis_matrix(::SiteType"Qubit", new_s::Index, old_s::Index)
-    _change_of_basis_to_ptm(new_s, old_s)
+    return _change_of_basis_to_ptm(new_s, old_s)
 end
 
 """

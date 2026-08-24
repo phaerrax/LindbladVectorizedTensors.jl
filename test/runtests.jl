@@ -175,24 +175,48 @@ end
 
 @testset "Adjoint-map tensor" verbose=true begin
     sites = siteinds("Qubit", 3)
-    x = random_mps(ComplexF64, sites; linkdims=4)
-    x_vec = vec_projector(x)
-    sites_vec = siteinds(x_vec)
+    v = random_mps(ComplexF64, sites; linkdims=4)
+    v_vec = vec_projector(v)
+    sites_vec = siteinds(v_vec)
 
+    # Normal tensor.
     u = ITensors.op("RandomUnitary", sites[2], sites[3])
     u_vec = adjointmap_itensor(u, [sites[2], sites[3]], [sites_vec[2], sites_vec[3]])
-    @test vec_projector(apply(u, x); existing_sites=sites_vec) ≈ apply(u_vec, x_vec)
+    @test vec_projector(apply(u, v); existing_sites=sites_vec) ≈ apply(u_vec, v_vec)
 
+    # Tensor with keyword arguments.
     θ = rand()
     u = ITensors.op("Ry", sites, 1; θ)
     u_vec = adjointmap_itensor("Ry", sites_vec, 1; θ)
-    @test vec_projector(apply(u, x); existing_sites=sites_vec) ≈ apply(u_vec, x_vec)
+    @test vec_projector(apply(u, v); existing_sites=sites_vec) ≈ apply(u_vec, v_vec)
 
-    # Test the Vector{<:Index}-based call forms work through the ITensor-based method.
+    # Vector{<:Index}-based call forms.
     t_a = adjointmap_itensor("CX", sites_vec, 1, 2)
     t_b = adjointmap_itensor(sites_vec, "CX", 1, 2)
     t_c = adjointmap_itensor(
         ITensors.op("CX", sites, 1, 2), [sites[1], sites[2]], [sites_vec[1], sites_vec[2]]
     )
     @test t_a ≈ t_b ≈ t_c
+
+    # Other site types than Qubit.
+    sites = siteinds("S=1/2", 2)
+    v = random_mps(ComplexF64, sites; linkdims=4)
+    v_vec = vec_projector(v)
+    sites_vec = siteinds(v_vec)
+    xy = ITensors.op("X", sites[1]) * ITensors.op("Y", sites[2])
+    xy_vec = adjointmap_itensor(xy, [sites[1], sites[2]], [sites_vec[1], sites_vec[2]])
+    @test vec_projector(apply(xy, v); existing_sites=sites_vec) ≈ apply(xy_vec, v_vec)
+
+    sites = siteinds("Boson", 3; dim=4)
+    v = random_mps(ComplexF64, sites; linkdims=4)
+    v_vec = vec_projector(v)
+    sites_vec = siteinds(v_vec)
+    aadag = ITensors.op("A", sites[1]) * ITensors.op("Adag", sites[2])
+    aadag_vec = adjointmap_itensor(
+        aadag, [sites[1], sites[2]], [sites_vec[1], sites_vec[2]]
+    )
+    # Note that `aadag` isn't unitary so we must pass `normalize=false` to `vec_projector`,
+    # otherwise it will renormalise `apply(aadag, v)` before computing the projector.
+    @test vec_projector(apply(aadag, v); existing_sites=sites_vec, normalize=false) ≈
+        apply(aadag_vec, v_vec)
 end
