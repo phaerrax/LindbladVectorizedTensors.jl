@@ -21,7 +21,7 @@ end
 
 function gmat(v; dim=2)
     # Reconstruct the matrix by its coefficients (in the Gell-Mann basis).
-    sum(vi * b for (vi, b) in zip(v, LindbladVectorizedTensors.gellmannbasis(dim)))
+    return sum(vi * b for (vi, b) in zip(v, LindbladVectorizedTensors.gellmannbasis(dim)))
 end
 
 @testset "Left- and right-multiplication operators" begin
@@ -171,4 +171,28 @@ end
         @test cp_exp ≈ cp_exp_vec
         @test ccx_exp ≈ ccx_exp_vec
     end
+end
+
+@testset "Adjoint-map tensor" verbose=true begin
+    sites = siteinds("Qubit", 3)
+    x = random_mps(ComplexF64, sites; linkdims=4)
+    x_vec = vec_projector(x)
+    sites_vec = siteinds(x_vec)
+
+    u = ITensors.op("RandomUnitary", sites[2], sites[3])
+    u_vec = adjointmap_itensor(u, [sites[2], sites[3]], [sites_vec[2], sites_vec[3]])
+    @test vec_projector(apply(u, x); existing_sites=sites_vec) ≈ apply(u_vec, x_vec)
+
+    θ = rand()
+    u = ITensors.op("Ry", sites, 1; θ)
+    u_vec = adjointmap_itensor("Ry", sites_vec, 1; θ)
+    @test vec_projector(apply(u, x); existing_sites=sites_vec) ≈ apply(u_vec, x_vec)
+
+    # Test the Vector{<:Index}-based call forms work through the ITensor-based method.
+    t_a = adjointmap_itensor("CX", sites_vec, 1, 2)
+    t_b = adjointmap_itensor(sites_vec, "CX", 1, 2)
+    t_c = adjointmap_itensor(
+        ITensors.op("CX", sites, 1, 2), [sites[1], sites[2]], [sites_vec[1], sites_vec[2]]
+    )
+    @test t_a ≈ t_b ≈ t_c
 end

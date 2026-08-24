@@ -1,69 +1,70 @@
 export adjointmap_itensor
 
 """
-    adjointmapmatrix(X::OpName; kwargs...)
+    adjointmap_matrix(op::AbstractMatrix)
 
-Return the matrix (in the Gell-Mann basis) representing the action of ``X`` on a
-state ``ρ`` as ``XρX⁻¹``. The argument must be a valid ITensors OpName for the Qubit site
-type.
-Additional parameters needed to specify the operator may be passed as keyword arguments.
+Return the matrix (in the Gell-Mann basis) representing the action of an operator ``X`` on a
+state ``ρ`` as ``XρX⁻¹``, given the matrix representation of ``X``.
 """
-function adjointmapmatrix(X::OpName; kwargs...)
-    op = ITensors.op(X, SiteType("Qubit"); kwargs...)
-    # This is some square matrix. We can deduce the dimension, hence the number of qbits
-    # on which X acts, from it.
+function adjointmap_matrix(op::AbstractMatrix)
+    # `op` is some square matrix. We can deduce the dimension, hence the number of qbits
+    # on which it acts, from its size.
     n_qbits = Int(log2(size(op, 1)))
     return _hilbertschmidt_vec(a -> op * a * op', ptmbasis(n_qbits))
 end
 
 """
-    adjointmap_itensor(X::OpName, s1::Index, s_tail::Index...; kwargs...)
+    adjointmap_itensor(t::ITensor, orig_sites::Vector{<:Index}, vec_sites::Vector{<:Index})
+    adjointmap_itensor(op_name, sites::Index...; kwargs...)
+    adjointmap_itensor(op_name, sites::Vector{<:Index}, n::Int...; kwargs...)
 
-Return the ITensor representing the action of ``X`` on a state ``ρ`` as ``XρX⁻¹``, where
-`X` acts on sites given by the Index list.
-The argument must be a valid ITensors OpName for the Qubit site type.
-Additional parameters needed to specify the operator may be passed as keyword arguments.
+Return the ITensor representing the action of an operator ``X`` on a state ``ρ`` as
+``XρX⁻¹``, where ``X`` acts on the given site(s).
+
+``X`` may be given as an ITensor already acting on the (unvectorized) sites `orig_sites`, or
+as a valid ITensors operator name `op_name` for the Qubit site type, in which case
+additional parameters needed to specify the operator may be passed as keyword arguments.
 """
-function adjointmap_itensor(on::OpName, s1::Index, s_tail::Index...; kwargs...)
-    # Adapted from the ITensors.op function for the `vOsc` site type in LindbladVectorizedTensors
-    rs = reverse((s1, s_tail...))
-    opmat = adjointmapmatrix(on; kwargs...)
-    return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)
+function adjointmap_itensor(
+    t::ITensor, qubit_sites::Vector{<:Index}, vqubit_sites::Vector{<:Index}
+)
+    # qubit_sites and vqubit_sites must be given in the SAME site order, i.e.,
+    # qubit_sites[i] and vqubit_sites[i] must refer to the same physical site --- the
+    # combiner does not care what tags/ids those indices carry beyond their dimension.
+    cmb = combiner(qubit_sites...)
+    cmb_index = combinedind(cmb)
+    mat = matrix(cmb' * t * cmb, cmb_index', cmb_index)
+    # matrix(T, i, j) returns a matrix M such that T = itensor(M, i, j), that is,
+    #   M[a, b] = T[i => a, j => b]
+    # so with this line we are making sure that cmb_index' indexes rows and cmb_index
+    # indexes columns.
+    op_mat = adjointmap_matrix(mat)
+    return ITensors.itensor(op_mat, prime.(vqubit_sites)..., dag.(vqubit_sites)...)
 end
 
-function adjointmap_itensor(x::AbstractString, s1::Index, s_tail::Index...; kwargs...)
-    return adjointmap_itensor(OpName(x), s1, s_tail...; kwargs...)
+function adjointmap_itensor(
+    on::Union{AbstractString,OpName}, s1::Index, s_tail::Index...; kwargs...
+)
+    vqubit_sites = [s1, s_tail...]
+    # We need to create a temporary list of "Qubit" sites to use with the ITensor-based
+    # adjointmap_itensor method.
+    qubit_sites = [Index(2, "Qubit") for _ in vqubit_sites]
+    t = ITensors.op(on, qubit_sites...; kwargs...)
+    return adjointmap_itensor(t, qubit_sites, vqubit_sites)
 end
 
-"""
-    adjointmap_itensor(on::OpName, sites::Vector{<:Index}, n::Int...; kwargs...)
-
-Return the ITensor representing the action of ``X`` on a state ``ρ`` as ``XρX⁻¹``, where
-`X` acts on the given sites.
-The argument must be a valid ITensors OpName for the Qubit site type.
-Additional parameters needed to specify the operator may be passed as keyword arguments.
-"""
-function adjointmap_itensor(on::OpName, sites::Vector{<:Index}, n::Int...; kwargs...)
+# Variant with site list and indices given separately.
+function adjointmap_itensor(
+    on::Union{AbstractString,OpName}, sites::Vector{<:Index}, n::Int...; kwargs...
+)
     s1, s_tail... = [sites[j] for j in n]
     return adjointmap_itensor(on, s1, s_tail...; kwargs...)
 end
 
-function adjointmap_itensor(x::AbstractString, sites::Vector{<:Index}, n::Int...; kwargs...)
-    return adjointmap_itensor(OpName(x), sites, n...; kwargs...)
-end
-
-"""
-    adjointmap_itensor(sites::Vector{<:Index}, on::OpName, n::Int...; kwargs...)
-
-Return the ITensor representing the action of ``X`` on a state ``ρ`` as ``XρX⁻¹``, where
-`X` acts on the given sites.
-The argument must be a valid ITensors OpName for the Qubit site type.
-Additional parameters needed to specify the operator may be passed as keyword arguments.
-"""
-function adjointmap_itensor(sites::Vector{<:Index}, on::OpName, n::Int...; kwargs...)
+# Variant with the list of sites given before the operator name. We don't really expose this
+# syntax, but ITensor has it, so maybe there's a point in defining it.
+function adjointmap_itensor(
+    sites::Vector{<:Index}, on::Union{AbstractString,OpName}, n::Int...; kwargs...
+)
     return adjointmap_itensor(on, sites, n...; kwargs...)
-end
-
-function adjointmap_itensor(sites::Vector{<:Index}, x::AbstractString, n::Int...; kwargs...)
-    return adjointmap_itensor(sites, OpName(x), n...; kwargs...)
 end
