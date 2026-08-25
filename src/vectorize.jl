@@ -11,6 +11,9 @@ const VecSiteType = Union{
 
 const _implemented_vtypes = ["Boson", "Electron", "FDot3", "Fermion", "Qubit", "S=1/2"]
 
+issupported(st::AbstractString) = in(st, _implemented_vtypes)
+issupported(st::SiteType) = issupported(sitetypestring(st))
+
 function nonvec_stype_name(vst::VecSiteType)
     # Remove the first character (the 'v') from the site type name, and return the name.
     s = sitetypestring(vst)

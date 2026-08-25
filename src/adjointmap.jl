@@ -76,8 +76,12 @@ function adjointmap_itensor(
     # vectorisation function.
     stypes = ITensors.SiteTypes._sitetypes.(orig_sites)  # all tags
     common_stypes = intersect(stypes...)  # keep only shared tags
-    filter!(!=(SiteType("Site")), common_stypes)  # remove "Site", which is usually there
-    common_stype = only(common_stypes)  # only one must remain
+    filter!(issupported, common_stypes)  # remove extraneous tags
+    # Only one type tag must remain at the end --- heterogeneous ITensors are not supported.
+    if length(common_stypes) > 1
+        error("adjointmap_itensor only supports operators defined on a single site type")
+    end
+    common_stype = only(common_stypes)
 
     dims = dim.(orig_sites)
     if !allequal(dims)

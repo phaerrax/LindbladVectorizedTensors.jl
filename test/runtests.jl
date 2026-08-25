@@ -219,7 +219,10 @@ end
     v_vec = vec_projector(v)
     sites_vec = siteinds(v_vec)
 
-    # Normal tensor.
+    # Normal tensor. Check that it works with one index and with more than one.
+    u = ITensors.op("RandomUnitary", sites[1])
+    u_vec = adjointmap_itensor(u, [sites[1]], [sites_vec[1]])
+    @test vec_projector(apply(u, v); existing_sites=sites_vec) ≈ apply(u_vec, v_vec)
     u = ITensors.op("RandomUnitary", sites[2], sites[3])
     u_vec = adjointmap_itensor(u, [sites[2], sites[3]], [sites_vec[2], sites_vec[3]])
     @test vec_projector(apply(u, v); existing_sites=sites_vec) ≈ apply(u_vec, v_vec)
