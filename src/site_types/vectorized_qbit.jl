@@ -42,24 +42,7 @@ function ptmbasis(nqbits::Int)
     end
 end
 
-# Shorthand notation:
-function vstate(sn::StateName, ::SiteType"vQubit")
-    v = ITensors.state(sn, SiteType("Qubit"))
-    return _hilbertschmidt_vec(kron(v, v'), ptmbasis(1))
-end
-function vop(sn::StateName, ::SiteType"vQubit")
-    return _hilbertschmidt_vec(op(statenamestring(sn), siteind("Qubit")), ptmbasis(1))
-end
-
-# States (actual ones)
-# --------------------
-ITensors.state(sn::StateName"0", st::SiteType"vQubit") = vstate(sn, st)
-ITensors.state(sn::StateName"1", st::SiteType"vQubit") = vstate(sn, st)
-
-# States (vectorized operators)
-# -----------------------------
-ITensors.state(sn::StateName"Id", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"X", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"Y", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"Z", st::SiteType"vQubit") = vop(sn, st)
-ITensors.state(sn::StateName"H", st::SiteType"vQubit") = vop(sn, st)
+# States derived from the Qubit site type
+register_vectorized_names(
+    SiteType("vQubit"); states=("0", "1"), operators=("Id", "X", "Y", "Z", "H")
+)

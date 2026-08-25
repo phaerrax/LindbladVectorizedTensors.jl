@@ -16,7 +16,100 @@ function nonvec_stype_name(vst::VecSiteType)
     s = sitetypestring(vst)
     return s[nextind(s, 1):end]
 end
+
 nonvec_stype(vst::VecSiteType) = SiteType(nonvec_stype_name(vst))
+
+"""
+    vstate(sn::StateName, vst::VecSiteType; dim=nothing)
+
+Return the coordinate vector, in the appropriate vectorisation basis (as given by
+`vectorizationbasis`), of the density matrix `|v⟩⟨v|` where `|v⟩` is the state `sn` of the
+non-vectorised site type corresponding to `vst` (e.g. "Qubit" for "vQubit").
+
+The keyword argument `dim` must be given for site types whose non-vectorised counterpart has
+a variable dimension (e.g. "Boson").
+"""
+function vstate(sn::StateName, vst::VecSiteType; dim=nothing)
+    st = nonvec_stype(vst)
+    if isnothing(dim)
+        v = ITensors.state(sn, st)
+        basis = vectorizationbasis(st, 1)
+    else
+        s = siteind(nonvec_stype_name(vst); dim=dim)
+        v = vector(ITensors.state(sn, st, s))
+        basis = vectorizationbasis(st, 1; dim=dim)
+    end
+    return _hilbertschmidt_vec(kron(v, v'), basis)
+end
+
+"""
+    vop(sn::StateName, vst::VecSiteType; dim=nothing)
+
+Return the coordinate vector, in the appropriate vectorisation basis (as given by
+`vectorizationbasis`), of the operator named `sn` of the non-vectorised site type
+corresponding to `vst` (e.g. "Qubit" for "vQubit").
+
+The keyword argument `dim` must be given for site types whose non-vectorised counterpart has
+a variable dimension (e.g. "Boson").
+"""
+function vop(sn::StateName, vst::VecSiteType; dim=nothing)
+    st = nonvec_stype(vst)
+    # We need to call the `ITensor.op(::String, ::Index)` method, instead of calling, e.g.
+    # the `ITensors.op(::StateName, ::SiteType)` form directly on `st`, since some OpNames
+    # (e.g. "Id") are resolved by ITensors only through the first method, using the Index's
+    # dimension: calling the second form would directly return `nothing` for those, instead.
+    if isnothing(dim)
+        s = siteind(nonvec_stype_name(vst))
+        basis = vectorizationbasis(st, 1)
+    else
+        s = siteind(nonvec_stype_name(vst); dim=dim)
+        basis = vectorizationbasis(st, 1; dim=dim)
+    end
+    mat = ITensors.op(statenamestring(sn), s)
+    return _hilbertschmidt_vec(mat, basis)
+end
+
+# `vstate` and `vop` can be used through the following function to derive states and
+# operators for vectorised types from the ones for the corresponding non-vectorised type.
+# This automatically generates, at module load time, one `ITensors.state` method for each of
+# the names, as if it had been written out by hand as `ITensors.state(sn::StateName"name",
+# st::VecSiteType) = vstate(sn, st)`; this way we can avoid having to write down one such
+# line per name.
+# As the `state` and `op` methods take an additional positional `d::Int` argument if the
+# site type has a variable dimension, we need to know we have to write `vstate`/`vop` with a
+# `dim` keyword argument in those cases.
+"""
+    register_vectorized_names(vst::VecSiteType; states, operators, dim=false)
+
+Define `ITensors.state(::StateName"name", ::typeof(vst)) = vstate(StateName("name"), vst)`
+for each `name` in `states`, and likewise with `vop` for each `name` in `operators`.
+
+The `dim` argument must be `true` for site types whose non-vectorised counterpart has a
+variable dimension (e.g. "Boson").
+"""
+function register_vectorized_names(vst::VecSiteType; states, operators, dim=false)
+    if dim
+        for name in states
+            @eval ITensors.state(sn::typeof(StateName($name)), ::typeof($vst), d::Int) =
+                vstate(sn, $vst; dim=d)
+        end
+        for name in operators
+            @eval ITensors.state(sn::typeof(StateName($name)), ::typeof($vst), d::Int) =
+                vop(sn, $vst; dim=d)
+        end
+    else
+        for name in states
+            @eval ITensors.state(sn::typeof(StateName($name)), ::typeof($vst)) =
+                vstate(sn, $vst)
+        end
+        for name in operators
+            @eval ITensors.state(sn::typeof(StateName($name)), ::typeof($vst)) =
+                vop(sn, $vst)
+        end
+    end
+
+    return nothing
+end
 
 # In order to use tr(x'*y) as a tool to extract coefficient the basis must of course be
 # orthonormal wrt this inner product.  The canonical basis or the Gell-Mann one are okay.

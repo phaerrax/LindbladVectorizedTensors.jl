@@ -24,17 +24,6 @@ ITensors.op(on::OpName"F", st::SiteType"vBoson", ds::Int...) = op(OpName"Id"(), 
 # the dimension of the space, so we need to compute ITensors.dim(s), i.e. the dimensions of
 # the Indices of the state or operator, and append them to the function arguments.
 
-# Shorthand notation
-function vstate(sn::StateName, ::SiteType"vBoson", d::Int)
-    v = state(statenamestring(sn), siteind("Boson"; dim=d))
-    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(d))
-end
-function vop(sn::StateName, ::SiteType"vBoson", d::Int)
-    return _hilbertschmidt_vec(
-        op(statenamestring(sn), siteind("Boson"; dim=d)), gellmannbasis(d)
-    )
-end
-
 # States
 # ------
 
@@ -52,6 +41,12 @@ function ITensors.state(::StateName{N}, ::SiteType"vBoson", d::Int) where {N}
     return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(d))
 end
 
+# States derived from the Boson site type
+register_vectorized_names(
+    SiteType("vBoson"); states=(), operators=("Adag", "A", "N", "Id", "X", "Y"), dim=true
+)
+
+# Thermal states
 function ITensors.state(
     ::StateName"ThermEq", st::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
 )
@@ -83,15 +78,6 @@ function ITensors.state(
     end
     return _hilbertschmidt_vec(xop * ρ_eq, gellmannbasis(d))
 end
-
-# States representing vectorised operators
-# ----------------------------------------
-ITensors.state(sn::StateName"Adag", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"A", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"N", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"Id", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"X", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
-ITensors.state(sn::StateName"Y", st::SiteType"vBoson", d::Int) = vop(sn, st, d)
 
 # GKSL equation terms
 # -------------------

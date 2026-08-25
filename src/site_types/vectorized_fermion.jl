@@ -17,37 +17,20 @@ ITensors.space(::SiteType"vFermion") = 4
 # while a linear map L : Mat(ℂ²) → Mat(ℂ²) by the matrix ℓ such that
 #     ℓᵢⱼ = tr(Λᵢ L(Λⱼ)).
 
-# Shorthand notation:
-function vstate(sn::StateName, ::SiteType"vFermion")
-    v = ITensors.state(sn, SiteType("Fermion"))
-    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(2))
-end
-function vop(sn::StateName, ::SiteType"vFermion")
-    return _hilbertschmidt_vec(
-        op(statenamestring(sn), siteind("Fermion")), gellmannbasis(2)
-    )
-end
+# States and operators
+# ---------------------
 
-# States (actual ones)
-# --------------------
-ITensors.state(sn::StateName"Emp", st::SiteType"vFermion") = vstate(sn, st)
-ITensors.state(sn::StateName"Occ", st::SiteType"vFermion") = vstate(sn, st)
+# States derived from the Fermion site type
+register_vectorized_names(
+    SiteType("vFermion");
+    states=("Emp", "Occ"),
+    operators=("Id", "N", "F", "A", "a", "Adag", "adag", "A†", "a†"),
+)
 
+# "Up"/"Dn" are aliases of "Occ"/"Emp" for the Fermion site type.
 function ITensors.state(::StateName"Up", st::SiteType"vFermion")
     return ITensors.state(StateName("Occ"), st)
 end
 function ITensors.state(::StateName"Dn", st::SiteType"vFermion")
     return ITensors.state(StateName("Emp"), st)
 end
-
-# States representing vectorised operators
-# ----------------------------------------
-ITensors.state(sn::StateName"Id", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"N", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"F", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"A", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"a", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"Adag", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"adag", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"A†", st::SiteType"vFermion") = vop(sn, st)
-ITensors.state(sn::StateName"a†", st::SiteType"vFermion") = vop(sn, st)

@@ -19,17 +19,6 @@ end
 # while a linear map L : Mat(ℂ⁴) → Mat(ℂ⁴) by the matrix ℓ such that
 #     ℓᵢⱼ = tr(Λᵢ L(Λⱼ)).
 
-# Shorthand notation:
-function vstate(sn::AbstractString, ::SiteType"vFDot3")
-    v = ITensors.state(StateName(sn), SiteType("FDot3"))
-    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(2^3))
-end
-function vop(on::AbstractString, ::SiteType"vFDot3")
-    return _hilbertschmidt_vec(
-        op(statenamestring(sn), siteind("FDot3")), gellmannbasis(2^3)
-    )
-end
-
 # basis order:
 # e_1 -> |∅⟩
 # e_2 -> c₁†|∅⟩
@@ -39,24 +28,17 @@ end
 # e_6 -> c₁† c₃†|∅⟩
 # e_7 -> c₂† c₃†|∅⟩
 # e_8 -> c₁† c₂† c₃†|∅⟩
-ITensors.state(sn::StateName"Emp", st::SiteType"vFDot3") = vstate(sn, st)
+
 ITensors.state(::StateName"0", st::SiteType"vFDot3") = state(StateName("Emp"), st)
 ITensors.state(::StateName"Vac", st::SiteType"vFDot3") = state(StateName("Emp"), st)
 ITensors.state(::StateName"Vacuum", st::SiteType"vFDot3") = state(StateName("Emp"), st)
 
-ITensors.state(sn::StateName"1", st::SiteType"vFDot3") = vstate(sn, st)
-ITensors.state(sn::StateName"2", st::SiteType"vFDot3") = vstate(sn, st)
-ITensors.state(sn::StateName"12", st::SiteType"vFDot3") = vstate(sn, st)
-ITensors.state(sn::StateName"3", st::SiteType"vFDot3") = vstate(sn, st)
-ITensors.state(sn::StateName"13", st::SiteType"vFDot3") = vstate(sn, st)
-ITensors.state(sn::StateName"23", st::SiteType"vFDot3") = vstate(sn, st)
-ITensors.state(sn::StateName"123", st::SiteType"vFDot3") = vstate(sn, st)
-
-ITensors.state(sn::StateName"Id", st::SiteType"vFDot3") = vop(sn, st)
-ITensors.state(sn::StateName"n1", st::SiteType"vFDot3") = vop(sn, st)
-ITensors.state(sn::StateName"n2", st::SiteType"vFDot3") = vop(sn, st)
-ITensors.state(sn::StateName"n3", st::SiteType"vFDot3") = vop(sn, st)
-ITensors.state(sn::StateName"ntot", st::SiteType"vFDot3") = vop(sn, st)
+# States derived from the FDot3 site type
+register_vectorized_names(
+    SiteType("vFDot3");
+    states=("Emp", "1", "2", "12", "3", "13", "23", "123"),
+    operators=("Id", "n1", "n2", "n3", "ntot"),
+)
 
 function dot_hamiltonian(::SiteType"vFDot3", energies, coulomb_repulsion, sitenumber::Int)
     E = OpSum()
