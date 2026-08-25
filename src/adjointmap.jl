@@ -92,6 +92,12 @@ function adjointmap_itensor(
     return ITensors.itensor(op_mat, prime.(vec_sites)..., dag.(vec_sites)...)
 end
 
+# Easier interface with named arguments, so that it's not necessary to remember which set of
+# indices goes first (maybe one day the other method will be retired).
+function adjointmap_itensor(t::ITensor; orig_sites, vec_sites)
+    return adjointmap_itensor(t, orig_sites, vec_sites)
+end
+
 function adjointmap_itensor(
     on::Union{AbstractString,OpName}, s1::Index, s_tail::Index...; kwargs...
 )
