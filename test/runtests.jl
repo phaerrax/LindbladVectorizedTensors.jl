@@ -25,29 +25,69 @@ function gmat(v; dim=2)
 end
 
 @testset "Left- and right-multiplication operators" begin
-    N = 4
-    sites = siteinds("vS=1/2", N)
-    x = random_mps(sites; linkdims=4)
-    # Note that we need to generate _real_ MPSs, since the states are Hermitian matrices
-    # hence linear combinations of Gell-Mann matrices with real coefficients.
-    # The tests might fail if the MPS is complex (but why though? TODO find out!).
+    # For an orthonormal basis {b_i} (wrt the Hilbert-Schmidt inner product) the
+    # coefficient vector of a matrix M is v_i = tr(b_i' * M).
+    # `premultiply(t, vst)` must be the matrix representation, in that same basis, of the
+    # linear map ρ ↦ t*ρ, and likewise `postmultiply(t, vst)` for ρ ↦ ρ*t.
+    coeffs(m, basis) = [tr(b' * m) for b in basis]
 
-    @test expect_trace(x, "Sx") ≈ expect_vec(x, "Sx")
-    @test expect_trace(x, "Sy") ≈ expect_vec(x, "Sy")
-    @test expect_trace(x, "Sz") ≈ expect_vec(x, "Sz")
+    function test_multiply(st_name; dim=nothing)
+        st = SiteType(st_name)
+        vst = SiteType("v" * st_name)
+        site_idx, site_dim = if isnothing(dim)
+            siteinds(st_name, 1), ITensors.space(st)
+        else
+            siteinds(st_name, 1; dim=dim), dim
+        end
+        basis = LindbladVectorizedTensors.vectorizationbasis(st, 1; dim=site_dim)
 
-    sites = siteinds("vBoson", N; dim=5)
-    x = random_mps(sites; linkdims=4)
+        # We don't really need to generate physically meaningful operators and states here
+        # to check that pre/postmultiply work: random matrices will do.
 
-    @test expect_trace(x, "N") ≈ expect_vec(x, "N")
-    @test expect_trace(x, "X") ≈ expect_vec(x, "X")
-    @test expect_trace(x, "A") ≈ expect_vec(x, "A")
+        t_mat = rand(ComplexF64, site_dim, site_dim)
+        t = ITensors.op(t_mat, site_idx)
 
-    sites = siteinds("vFermion", N)
-    x = random_mps(sites; linkdims=4)
+        ρ_mat = rand(ComplexF64, site_dim, site_dim)
+        ρ_vec = coeffs(ρ_mat, basis)
 
-    @test expect_trace(x, "N") ≈ expect_vec(x, "N")
-    @test expect_trace(x, "A") ≈ expect_vec(x, "A")
+        return LindbladVectorizedTensors.premultiply(t, vst) * ρ_vec ≈
+               coeffs(t_mat * ρ_mat, basis) &&
+               LindbladVectorizedTensors.postmultiply(t, vst) * ρ_vec ≈
+               coeffs(ρ_mat * t_mat, basis)
+    end
+
+    @test test_multiply("S=1/2")
+    @test test_multiply("Electron")
+    @test test_multiply("Fermion")
+    @test test_multiply("Qubit")
+    # Here we check the case where the dimension must be explicitly provided.
+    @test test_multiply("Boson"; dim=3) && test_multiply("Boson"; dim=4)
+
+    @testset "MPS interoperability" begin
+        N = 4
+        sites = siteinds("vS=1/2", N)
+        x = random_mps(sites; linkdims=4)
+        # Note that we need to generate _real_ MPSs, since the states are Hermitian matrices
+        # hence linear combinations of Gell-Mann matrices with real coefficients.
+        # The tests might fail if the MPS is complex (but why though? TODO find out!).
+
+        @test expect_trace(x, "Sx") ≈ expect_vec(x, "Sx")
+        @test expect_trace(x, "Sy") ≈ expect_vec(x, "Sy")
+        @test expect_trace(x, "Sz") ≈ expect_vec(x, "Sz")
+
+        sites = siteinds("vBoson", N; dim=5)
+        x = random_mps(sites; linkdims=4)
+
+        @test expect_trace(x, "N") ≈ expect_vec(x, "N")
+        @test expect_trace(x, "X") ≈ expect_vec(x, "X")
+        @test expect_trace(x, "A") ≈ expect_vec(x, "A")
+
+        sites = siteinds("vFermion", N)
+        x = random_mps(sites; linkdims=4)
+
+        @test expect_trace(x, "N") ≈ expect_vec(x, "N")
+        @test expect_trace(x, "A") ≈ expect_vec(x, "A")
+    end
 end
 
 @testset "Definition of vectorised states" verbose=true begin
