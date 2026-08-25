@@ -183,10 +183,6 @@ sum(
 
 ## Adjoint map
 
-!!! warning "Only available for the `vQubit` site tipe"
-    At the time of writing this, the `adjointmap_itensor` function is available
-    only for `vQubit` sites.
-
 Another common operation on mixed states is \\(\rho \mapsto X \rho \adj{X}\\),
 where \\(X\\) is some operator. For example, in the definition of the
 dissipation terms in the GKSL equation (see the [relative example](@ref "GKSL
@@ -197,9 +193,50 @@ This is straightforward because the `A` and `Adag` operators are already
 defined, but not all operators have their adjoint available in the library.
 
 The `adjointmap_itensor`[^1] function provides a convenient way of creating the
-tensor representing the above map for any operator that already exists for the
-non-vectorised site type.  The syntax is similar to the one of the `op`
-function: for example, we can write
+tensor representing the above map. Define, for example, the following tensors
+`t1` and `t2`:
+
+```jldoctest operations
+julia> s = siteinds("Boson", 4; dim=4);
+
+julia> s_vec = siteinds("vBoson", 2; dim=4);
+
+julia> ρ_vec = state("0", s_vec[1]) * state("2", s_vec[2]);
+
+julia> t1 = random_itensor(s[1], s[1]');
+
+julia> t2 = random_itensor(s[1], s[2], s[2]', s[1]');
+
+```
+
+The `adjointmap_itensor` takes the tensor as the first argument; then, we need
+to provide the original sites on which the tensor acts (the `orig_sites` keyword
+argument, mandatory) and the sites of the vectorised site type which the
+returned tensor will act on (the `vec_sites` keyword argument, mandatory).  This
+is necessary since the original tensor and the result of `adjointmap_itensor`
+are defined on different sets of indices which in principle might have nothing
+to do with each other.  Note that `orig_sites` and `vec_sites` are always
+vectors of indices, even when there is only one index (per argument).
+
+The function automatically computes the adjoint of the given operator and
+creates the tensor corresponding to the vectorisation of the \\(\rho \mapsto X
+\rho \adj{X}\\) map, that can then be applied to MPSs or other ITensors of the
+vectorised site type.
+
+```jldoctest operations
+julia> t1_vec = adjointmap_itensor(t1; orig_sites=[s[1]], vec_sites=[s_vec[1]]);
+
+julia> apply(t1_vec, ρ_vec);
+
+julia> t2_vec = adjointmap_itensor(t2; orig_sites=s[1:2], vec_sites=s_vec[1:2]);
+
+julia> apply(t2_vec, ρ_vec);
+
+```
+
+If the operator is already defined with an `OpName` for the non-vectorised site
+type, then there is a simpler syntax, similar to the `op` function: for example,
+we can write
 
 ```jldoctest operations
 julia> s = siteinds("vQubit", 6);
@@ -212,14 +249,9 @@ julia> apply(adjointmap_itensor("Rx", s, 5; θ=pi/3), ρ);
 
 ```
 
-In these cases we did not need to define the adjoint of "CNOT" or "Rx": the
+In these cases we skip the creation of the non-vectorised tensor altogether. We
+also did not need to define the adjoint of "CNOT" or "Rx": the
 `adjointmap_itensor` already takes care of computing it internally, without
 having to define a new operator.
-The function automatically computes the adjoint of the given operator and
-creates the tensor corresponding to the vectorisation of the \\(\rho \mapsto X
-\rho \adj{X}\\) map, that can then be applied to MPSs or other ITensors.
 
-[^1]: The name of this function comes from the similarity of this map to the
-    [adjoint representation]
-    (https://en.wikipedia.org/wiki/Adjoint_representation) of a group (typically
-    a Lie group).
+[^1]: The name of this function comes from the similarity of this map to the [adjoint representation](https://en.wikipedia.org/wiki/Adjoint_representation) of a group (typically a Lie group).

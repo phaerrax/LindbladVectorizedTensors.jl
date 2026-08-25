@@ -236,7 +236,7 @@ julia> function D(n)
 
 !!! tip
     Notice how we had to write the right-multiplication operators: in order to
-    have \\(\rhoXY\\), we need to right-multiply first by \\(X\\) and then by
+    have \\(\rho XY\\), we need to right-multiply first by \\(X\\) and then by
     \\(Y\\), which in ITensor language means that the operator acting on
     \\(\rho\\) is `op("⋅Y * ⋅X", ...)` (which corresponds to `apply(op("⋅Y",
     ...), op("⋅X", ...))`) since composition is done in the usual

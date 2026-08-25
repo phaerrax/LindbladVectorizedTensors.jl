@@ -129,7 +129,9 @@ bosonic particle, or a harmonic oscillator (with a truncated, thus
 finite-dimensional Hilbert space).
 
 The keyword argument `dim` (default: 2) can be provided to specify the dimension
-of the index, i.e. the number of available energy levels plus one.
+of the Hilbert space of the particle, i.e. the number of available energy levels
+plus one. (This is _not_ the dimension of the index, which will be instead
+`dim^2`.)
 
 Making a single "vBoson" site or collection of \\(N\\) "vBoson" sites:
 
