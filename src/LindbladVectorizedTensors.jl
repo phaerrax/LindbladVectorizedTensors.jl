@@ -5,15 +5,7 @@ using ITensorMPS
 using IterTools
 using LinearAlgebra
 
-export chain,
-    chop,
-    consecutivepairs,
-    embed_slice,
-    gellmannbasis,
-    gellmannmatrix,
-    jwstring,
-    sitenumber,
-    vonneumannentropy
+export chain, chop, consecutivepairs, embed_slice, jwstring, sitenumber, vonneumannentropy
 
 include("utils.jl")
 include("deprecated.jl")

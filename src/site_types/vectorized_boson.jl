@@ -33,12 +33,13 @@ function ITensors.state(sn::StateName, st::SiteType"vBoson", s::Index; kwargs...
     return itensor(stvec, s)
 end
 
-function ITensors.state(::StateName{N}, ::SiteType"vBoson", d::Int) where {N}
+function ITensors.state(::StateName{N}, vst::SiteType"vBoson", d::Int) where {N}
     # Eigenstates êₙ ⊗ êₙ of the number operator, wrt the Hermitian basis.
     n = parse(Int, String(N))
     v = zeros(d)
     v[n + 1] = 1.0
-    return _hilbertschmidt_vec(kron(v, v'), gellmannbasis(d))
+    st = nonvec_stype(vst)
+    return _hilbertschmidt_vec(kron(v, v'), vectorizationbasis(st, 1; dim=d))
 end
 
 # States derived from the Boson site type
@@ -48,35 +49,37 @@ register_vectorized_names(
 
 # Thermal states
 function ITensors.state(
-    ::StateName"ThermEq", st::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
+    ::StateName"ThermEq", vst::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
 )
-    if temperature == 0
-        return ITensors.state(StateName("0"), st, d)
+    return if temperature == 0
+        ITensors.state(StateName("0"), vst, d)
     else
-        numop = ITensors.op(OpName("N"), SiteType("Boson"), d)
+        st = nonvec_stype(vst)
+        numop = ITensors.op(OpName("N"), st, d)
         # We don't need to define our own matrix for the number operator when
         # we can call this one instead.
         ρ_eq = exp(-frequency / temperature * numop)
         ρ_eq /= tr(ρ_eq)
-        return _hilbertschmidt_vec(ρ_eq, gellmannbasis(d))
+        _hilbertschmidt_vec(ρ_eq, vectorizationbasis(st, 1; dim=d))
     end
 end
 
 # Product of X = (a+a†)/√2 and of the thermal equilibrium state Z⁻¹vec(exp(-βH)).
 # It is used in the computation of the correlation function of the bath.
 function ITensors.state(
-    ::StateName"X⋅Therm", st::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
+    ::StateName"X⋅Therm", vst::SiteType"vBoson", d::Int; frequency::Real, temperature::Real
 )
-    xop = ITensors.op(OpName("X"), SiteType("Boson"), d)
+    st = nonvec_stype(vst)
+    xop = ITensors.op(OpName("X"), st, d)
     if temperature == 0
         ρ_eq = zeros(Float64, d, d)
         ρ_eq[1, 1] = 1.0
     else
-        numop = ITensors.op(OpName("N"), SiteType("Boson"), d)
+        numop = ITensors.op(OpName("N"), st, d)
         ρ_eq = exp(-frequency / temperature * numop)
         ρ_eq /= tr(ρ_eq)
     end
-    return _hilbertschmidt_vec(xop * ρ_eq, gellmannbasis(d))
+    return _hilbertschmidt_vec(xop * ρ_eq, vectorizationbasis(st, 1; dim=d))
 end
 
 # GKSL equation terms

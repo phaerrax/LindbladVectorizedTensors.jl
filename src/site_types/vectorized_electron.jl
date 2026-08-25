@@ -33,26 +33,26 @@ register_vectorized_names(
     ),
 )
 
-function ITensors.state(::StateName"AupF", ::SiteType"vElectron")
+function ITensors.state(::StateName"AupF", vst::SiteType"vElectron")
+    st = nonvec_stype(vst)
     return _hilbertschmidt_vec(
-        ITensors.op(OpName("Aup"), SiteType("Electron")) *
-        ITensors.op(OpName("F"), SiteType("Electron")),
-        gellmannbasis(4),
+        ITensors.op(OpName("Aup"), st) * ITensors.op(OpName("F"), st),
+        vectorizationbasis(st, 1),
     )
 end
-function ITensors.state(::StateName"AdagupF", ::SiteType"vElectron")
+function ITensors.state(::StateName"AdagupF", vst::SiteType"vElectron")
+    st = nonvec_stype(vst)
     return _hilbertschmidt_vec(
-        ITensors.op(OpName("Adagup"), SiteType("Electron")) *
-        ITensors.op(OpName("F"), SiteType("Electron")),
-        gellmannbasis(4),
+        ITensors.op(OpName("Adagup"), st) * ITensors.op(OpName("F"), st),
+        vectorizationbasis(st, 1),
     )
 end
 
-function ITensors.state(::StateName"A", st::SiteType"vElectron")
-    return ITensors.state(StateName("AupF"), st) + ITensors.state(StateName("Adn"), st)
+function ITensors.state(::StateName"A", vst::SiteType"vElectron")
+    return ITensors.state(StateName("AupF"), vst) + ITensors.state(StateName("Adn"), vst)
 end
 
-function ITensors.state(::StateName"Adag", st::SiteType"vElectron")
-    return ITensors.state(StateName("AdagupF"), st) +
-           ITensors.state(StateName("Adagdn"), st)
+function ITensors.state(::StateName"Adag", vst::SiteType"vElectron")
+    return ITensors.state(StateName("AdagupF"), vst) +
+           ITensors.state(StateName("Adagdn"), vst)
 end

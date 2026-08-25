@@ -1,4 +1,4 @@
-### Canonical basis
+# Canonical basis
 
 """
     canonicalmatrix(i, j, dim)
@@ -76,49 +76,73 @@ function gellmannmatrix(j, k, dim)
 end
 
 """
-    gellmannbasis(d, nsites=1)
+    gellmannbasis(d)
 
-Return a list containing a Hermitian basis of the tensor product of `nsites` copies of
-``Mat(ℂᵈ)``, composed of (tensor products of) ``d²`` generalised Gell-Mann matrices.
+Return a list containing a Hermitian basis for ``Mat(ℂᵈ)`` composed of ``d²`` generalised
+Gell-Mann matrices.
 """
-function gellmannbasis(dim, nsites=1)
-    # Same as ptmbasis, but with a different single-site basis.
-    # TODO Unify the functions in a single one that returns the multi-site basis starting
-    # from the single-site one?
-    single_site_basis = [
-        gellmannmatrix(j, k, dim) for (j, k) in [Base.product(1:dim, 1:dim)...]
-    ]
+function gellmannbasis(dim)
+    return [gellmannmatrix(j, k, dim) for (j, k) in [Base.product(1:dim, 1:dim)...]]
+end
 
-    if nsites == 1
-        return single_site_basis  # and don't bother with the rest
+# "Pauli transfer matrix" basis --- the vQubit type uses this instead of the Gell-Mann
+# basis, for historical reasons.
+
+function ptmbasis()
+    st = SiteType("Qubit")
+    id = Matrix(I, 2, 2)
+    x = ITensors.op("X", st)
+    y = ITensors.op("Y", st)
+    z = ITensors.op("Z", st)
+    return (1 / sqrt(2)) .* [id, x, y, z]
+end
+
+# Multi-site bases
+
+# Transform the single-site bases above in bases for multiple sites.
+function multi_site_basis(single_site_basis, nsites)
+    return if nsites == 1
+        single_site_basis  # nothing to do
     else
-        bxn = Base.product(repeat([single_site_basis], nsites)...)
-        tensorproducts = [kron(s...) for s in bxn]
-        perm = reverse(ntuple(i -> i, Val{nsites}()))  # (nqbits, nqbits - 1, ..., 2, 1)
+        B = Base.product(repeat([single_site_basis], nsites)...)
+        # This is the Cartesian product of the single-site basis with itself `nsites` times.
+        # Each element of B is a list (b_1, b_2, ..., b_n) where b_i is a basis matrix.
+        # For example, with two sites, if
+        #   tp(a, b) = "$a ⊗ $b"
+        # and
+        #   ssb = ["s$n" for n in 0:3]
+        # then we obtain
+        #   [tp(b...) for b in Base.product(repeat([ssb], 2)...)] =
+        #    "b0 ⊗ b0"  "b0 ⊗ b1"  "b0 ⊗ b2"  "b0 ⊗ b3"
+        #    "b1 ⊗ b0"  "b1 ⊗ b1"  "b1 ⊗ b2"  "b1 ⊗ b3"
+        #    "b2 ⊗ b0"  "b2 ⊗ b1"  "b2 ⊗ b2"  "b2 ⊗ b3"
+        #    "b3 ⊗ b0"  "b3 ⊗ b1"  "b3 ⊗ b2"  "b3 ⊗ b3"
+
+        # By calling `Base.vec` on this matrix we stack its columns, but we want to unroll
+        # by rows instead, so we transpose it first. The call to `permutedims` below
+        # does this transposition "on all dimensions".
+        # (Why do we need rows instead of columns here?)
+        tensorproducts = [kron(b...) for b in B]
+        perm = reverse(ntuple(i -> i, Val(nsites)))  # (nsites, nsites - 1, ..., 2, 1)
         tensorproducts_transposed = permutedims(tensorproducts, perm)
 
-        return Base.vec(tensorproducts_transposed)
+        # We transform each of them in the tensor product b_1 ⊗ b_2 ⊗ ... ⊗ b_n.
+        Base.vec(tensorproducts_transposed)
     end
 end
 
 # All methods are defined with the `dim` keyword argument, for simplicity reasons, even if
-# only the Boson type actually uses it.
-vectorizationbasis(::SiteType, ::Int; dim) = nothing
+# makes sense for the Boson type only (the others use the default correct value).
+function vectorizationbasis(st::SiteType, nsites::Int; dim=nothing)
+    return multi_site_basis(gellmannbasis(ITensors.space(st)), nsites)
+end
+
+# Explicit override for Bosons, which need the site dimension supplied.
 function vectorizationbasis(st::SiteType"Boson", nsites::Int; dim)
-    return gellmannbasis(ITensors.space(st; dim), nsites)
+    return multi_site_basis(gellmannbasis(ITensors.space(st; dim)), nsites)
 end
-function vectorizationbasis(st::SiteType"Electron", nsites::Int; dim=ITensors.space(st))
-    return gellmannbasis(dim, nsites)
-end
-function vectorizationbasis(st::SiteType"FDot3", nsites::Int; dim=ITensors.space(st))
-    return gellmannbasis(dim, nsites)
-end
-function vectorizationbasis(st::SiteType"Fermion", nsites::Int; dim=ITensors.space(st))
-    return gellmannbasis(dim, nsites)
-end
-function vectorizationbasis(st::SiteType"Qubit", nsites::Int; dim=ITensors.space(st))
-    return ptmbasis(nsites)
-end
-function vectorizationbasis(st::SiteType"S=1/2", nsites::Int; dim=ITensors.space(st))
-    return gellmannbasis(dim, nsites)
+
+# Explicit override for Qubits, which use the PTM basis instead.
+function vectorizationbasis(st::SiteType"Qubit", nsites::Int; dim=nothing)
+    return multi_site_basis(ptmbasis(), nsites)
 end

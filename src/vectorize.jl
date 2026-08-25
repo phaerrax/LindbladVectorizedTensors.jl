@@ -209,7 +209,7 @@ function _change_of_basis_to_ptm(new_s::Index, old_s::Index)
     # Like _change_of_basis_matrix_canonical, but with the PTM basis instead.
     d = 2
     eb = canonicalbasis(d; columnmajor=false)
-    gb = ptmbasis(1)
+    gb = ptmbasis()
 
     u = ITensor(ComplexF64, new_s, old_s)
     for i in 1:(d ^ 2), j in 1:(d ^ 2)
@@ -353,49 +353,38 @@ function vec_projector(x::MPS; existing_sites=nothing, projector_kwargs...)
     return x_vec
 end
 
-function premultiply(t::ITensor, ::VecSiteType)
+# TODO Lift the assertion restriction and generalise the premultiply and postmultiply
+# functions to multi-site operators with different site-type dimensions.
+function premultiply(t::ITensor, vst::VecSiteType)
     site_inds = inds(t; plev=0)
     nsites = length(site_inds)
-
-    @assert allequal(dim, site_inds)
-    # TODO Lift this restriction and generalise the function to multi-site operators with
-    # different site-type dimensions.
-    d = dim(first(site_inds))
 
     C = combiner(site_inds)
     mat = matrix(C * t * C')
-    return _hilbertschmidt_vec(x -> mat * x, gellmannbasis(d, nsites))
-end
-
-function postmultiply(t::ITensor, ::VecSiteType)
-    site_inds = inds(t; plev=0)
-    nsites = length(site_inds)
 
     @assert allequal(dim, site_inds)
     d = dim(first(site_inds))
 
-    C = combiner(site_inds)
-    mat = matrix(C * t * C')
-    return _hilbertschmidt_vec(x -> x * mat, gellmannbasis(d, nsites))
+    basis = vectorizationbasis(nonvec_stype(vst), nsites; dim=d)
+    # Note that the dimension is used only if `nonvec_stype(vst)` is Boson; in the other
+    # cases it is ignored.
+
+    return _hilbertschmidt_vec(x -> mat * x, basis)
 end
 
-# Specialised versions for the "vQubit" site type, for which we use the PTM basis.
-# Since SiteType"vQubit" <: VecSiteType, these versions override the previous ones when
-# called with SiteType("vQubit") as second argument.
-function premultiply(t::ITensor, ::SiteType"vQubit")
+function postmultiply(t::ITensor, vst::VecSiteType)
     site_inds = inds(t; plev=0)
     nsites = length(site_inds)
-    C = combiner(site_inds)
-    mat = matrix(C * t * C')
-    return _hilbertschmidt_vec(x -> mat * x, ptmbasis(nsites))
-end
 
-function postmultiply(t::ITensor, ::SiteType"vQubit")
-    site_inds = inds(t; plev=0)
-    nsites = length(site_inds)
     C = combiner(site_inds)
     mat = matrix(C * t * C')
-    return _hilbertschmidt_vec(x -> x * mat, ptmbasis(nsites))
+
+    @assert allequal(dim, site_inds)
+    d = dim(first(site_inds))
+
+    basis = vectorizationbasis(nonvec_stype(vst), nsites; dim=d)
+
+    return _hilbertschmidt_vec(x -> x * mat, basis)
 end
 
 # The goal here is to define operators "A⋅" and "⋅A" in an automatic way whenever the
